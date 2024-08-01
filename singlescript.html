@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jellyfish Technologies</title>
+    <link rel="stylesheet" href="https://aibotfiles.vercel.app/style.css" />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://aibotfiles.vercel.app/logo.png"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="bot-container" style="display: none">
+        <header>
+          <div class="title-bar">
+            <img src="https://aibotfiles.vercel.app/logo.jpeg" class="logo" />
+            <h1 class="company-name">Jellyfish Technologies</h1>
+          </div>
+          <div class="action">
+            <button id="up-arrow" title="Go to top">
+              <img src="https://aibotfiles.vercel.app/uparrow.png" />
+            </button>
+            <button id="minimize" title="Minimize">
+              <img src="https://aibotfiles.vercel.app/minus.png" />
+            </button>
+            <button id="clear" title="Clear chat">
+              <img src="https://aibotfiles.vercel.app/delete.png" />
+            </button>
+          </div>
+        </header>
+        <section>
+          <div class="initial-greetings">
+            <img
+              src="https://aibotfiles.vercel.app/logo.png"
+              className="size-6"
+            />
+            <span class="initial-message"></span>
+          </div>
+          <div class="static-questions"></div>
+        </section>
+        <hr />
+        <footer>
+          <form id="query-form" autocomplete="off">
+            <input
+              type="text"
+              placeholder="Type your message here.."
+              id="query"
+            />
+            <input type="hidden" id="api-key" value="YOUR_API_KEY_HERE" />
+            <button type="submit" title="Send message">
+              <img src="https://aibotfiles.vercel.app/send-message.png" />
+            </button>
+          </form>
+        </footer>
+      </div>
+      <button class="bot-button" title="Jelly">
+        <img src="https://aibotfiles.vercel.app/bot.png" />
+      </button>
+    </div>
+    <script src="https://aibotfiles.vercel.app/script.js"></script>
+  </body>
+</html>
