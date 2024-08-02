@@ -150,7 +150,7 @@ async def run(consumer,collection):
                   <head>
                     <meta charset="UTF-8" />
                     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                    <title>Jellyfish Technologies</title>
+                    <title>{collection_metadata["company_name"]}</title>
                     <link rel="stylesheet" href="https://aibotfiles.vercel.app/style.css" />
                     <link
                       rel="icon"
@@ -163,8 +163,8 @@ async def run(consumer,collection):
                       <div class="bot-container" style="display: none">
                         <header>
                           <div class="title-bar">
-                            <img src="https://aibotfiles.vercel.app/logo.jpeg" class="logo" />
-                            <h1 class="company-name">Jellyfish Technologies</h1>
+                            <img src="https://aibotfiles.vercel.app/bot.png" class="logo" />
+                            <h1 class="company-name">{collection_metadata["company_name"]}</h1>
                           </div>
                           <div class="action">
                             <button id="up-arrow" title="Go to top">
@@ -180,11 +180,10 @@ async def run(consumer,collection):
                         </header>
                         <section>
                           <div class="initial-greetings">
-                            <img
-                              src="https://aibotfiles.vercel.app/logo.png"
-                              className="size-6"
-                            />
-                            <span class="initial-message"></span>
+                            <img src="https://aibotfiles.vercel.app/bot.png" />
+                            <span class="initial-message"
+                              >Welcome! I'm {company_document["chatbot_name"]}, How can I assist you today?</span
+                            >
                           </div>
                           <div class="static-questions"></div>
                         </section>
@@ -196,11 +195,12 @@ async def run(consumer,collection):
                               placeholder="Type your message here.."
                               id="query"
                             />
-                            <input type="hidden" id="api-key" value="{company_id}" />
+                            <input type="hidden" id="api-key" value="YOUR_API_KEY_HERE" />
                             <button type="submit" title="Send message">
                               <img src="https://aibotfiles.vercel.app/send-message.png" />
                             </button>
                           </form>
+                          <div><span>&copy;</span> Powered by Jellyfish Technologies</div>
                         </footer>
                       </div>
                       <button class="bot-button" title="Jelly">
@@ -210,6 +210,7 @@ async def run(consumer,collection):
                     <script src="https://aibotfiles.vercel.app/script.js"></script>
                   </body>
                 </html>
+
                 """
                 print(text)
                 send_email_smtp("AI Notification",text,email)
