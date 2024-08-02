@@ -195,7 +195,7 @@ async def run(consumer,collection):
                               placeholder="Type your message here.."
                               id="query"
                             />
-                            <input type="hidden" id="api-key" value="YOUR_API_KEY_HERE" />
+                            <input type="hidden" id="api-key" value={company_id} />
                             <button type="submit" title="Send message">
                               <img src="https://aibotfiles.vercel.app/send-message.png" />
                             </button>

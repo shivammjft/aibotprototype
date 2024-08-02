@@ -3,19 +3,110 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Contact Form</title>
+    <title>jellyfishtechnologies</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/x-icon" href="/front-end/logo.png" />
     <script
       src="https://kit.fontawesome.com/64d58efce2.js"
       crossorigin="anonymous"
     ></script>
   </head>
+  <style>
+    .bot-message {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #ffdfd6;
+      /* Light Peach */
+      border: 2px solid #f5c2b4;
+      /* Soft Pink */
+      padding: 20px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      width: 400px;
+      text-align: center;
+      font-family: "Poppins", sans-serif;
+      border-radius: 10px;
+    }
+
+    .bot-message .site-header {
+      background-color: #e3a5c7;
+      /* Soft Pink */
+      padding: 10px;
+      border-bottom: 1px solid #694f8e;
+      /* Deep Purple */
+      border-radius: 10px 10px 0 0;
+    }
+
+    .bot-message .site-header__title {
+      margin: 0;
+      font-size: 24px;
+      color: #694f8e;
+      /* Deep Purple */
+    }
+
+    .bot-message .main-content {
+      padding: 20px;
+      background-color: #f6e4f7;
+      /* Light Lavender */
+    }
+
+    .bot-message .main-content__checkmark {
+      color: #4caf50;
+      /* Success Green */
+      font-size: 50px;
+      margin-bottom: 20px;
+    }
+
+    .bot-message .main-content__body {
+      font-size: 16px;
+      color: #333;
+    }
+
+    .bot-message .site-footer {
+      background-color: #f6e4f7;
+      /* Light Lavender */
+      padding: 10px;
+      border-top: 1px solid #e3a5c7;
+      /* Soft Pink */
+      border-radius: 0 0 10px 10px;
+    }
+
+    .bot-message .site-footer__fineprint {
+      margin: 0;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    .container.blur {
+      filter: blur(5px);
+      pointer-events: none;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
 
   <body>
+    <div class="overlay" id="overlay"></div>
     <div class="logo-container">
       <img src="logo.png" alt="Jellyfish Technologies Logo" class="logo" />
     </div>
-    <div class="container">
+    <div class="container" id="container">
       <span class="big-circle"></span>
       <img src="img/shape.png" class="square" alt="" />
       <div class="form">
@@ -27,48 +118,45 @@
             experience and 4000+ successful projects, we empower businesses with
             cutting-edge technology.
           </p>
-
           <div class="info">
             <div class="information">
-              <i class="fas fa-map-marker-alt"></i> &nbsp &nbsp
+              <i class="fas fa-map-marker-alt"></i>&nbsp;&nbsp;
               <p>
                 D5 3rd floor, Logix Infotech Park, D Block, Sector 59, Noida,
                 Uttar Pradesh 201301
               </p>
             </div>
             <div class="information">
-              <i class="fas fa-envelope"></i> &nbsp &nbsp
+              <i class="fas fa-envelope"></i>&nbsp;&nbsp;
               <p>contact@jellyfishtechnologies.com</p>
             </div>
             <div class="information">
-              <i class="fas fa-phone"></i>&nbsp&nbsp
+              <i class="fas fa-phone"></i>&nbsp;&nbsp;
               <p>123-456-789</p>
             </div>
           </div>
-
           <div class="social-media">
             <p>Connect with us :</p>
             <div class="social-icons">
-              <a href="#">
-                <i class="fab fa-facebook-f"></i>
-              </a>
-              <a href="#">
-                <i class="fab fa-twitter"></i>
-              </a>
-              <a href="#">
-                <i class="fab fa-instagram"></i>
-              </a>
-              <a href="#">
-                <i class="fab fa-linkedin-in"></i>
-              </a>
+              <a href="https://www.facebook.com/teamjft/?locale=hi_IN&_rdr"
+                ><i class="fab fa-facebook-f"></i
+              ></a>
+              <a
+                href="Twitter: https://x.com/teamjft?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor"
+                ><i class="fab fa-twitter"></i
+              ></a>
+              <a href="https://www.instagram.com/teamjft/?hl=en"
+                ><i class="fab fa-instagram"></i
+              ></a>
+              <a href="https://www.linkedin.com/company/teamjft"
+                ><i class="fab fa-linkedin-in"></i
+              ></a>
             </div>
           </div>
         </div>
-
         <div class="contact-form">
           <span class="circle one"></span>
           <span class="circle two"></span>
-
           <form id="contact-form">
             <h3 class="title">Contact us</h3>
             <div class="input-container">
@@ -76,24 +164,73 @@
               <label for="email">Your Email</label>
               <span>Enter Your Email</span>
             </div>
-
             <div class="input-container textarea">
               <textarea name="company_name" class="input" required></textarea>
-              <label for="message">Campany name</label>
-              <span>Enter Your Message</span>
+              <label for="company_name">Company Name</label>
+              <span>Enter Your Company Name</span>
             </div>
-
-            <div class="input-container textarea">
-              <textarea name="base_link" class="input" required></textarea>
-              <label for="message">Enter Website Link </label>
-              <span>Enter Your Message</span>
+            <div class="input-container">
+              <input type="text" name="chatbot_name" class="input" required />
+              <label for="chatbot_name">Chatbot Name</label>
+              <span>Enter Your Chatbot Name</span>
+            </div>
+            <div class="input-container">
+              <input type="url" name="source_url" class="input" required />
+              <label for="source_url">Source URL</label>
+              <span>Enter Your Source URL</span>
+            </div>
+            <div class="input-container">
+              <input
+                type="text"
+                name="deployment_location"
+                class="input"
+                required
+              />
+              <label for="deployment_location">Deployment Location</label>
+              <span>Enter Your Deployment Location</span>
             </div>
             <input type="submit" value="Send" class="btn" />
           </form>
         </div>
       </div>
     </div>
+    <div class="bot-message" id="botMessage">
+      <header class="site-header" id="header">
+        <h1 class="site-header__title" data-lead-id="site-header-title">
+          CHATBOT TRAINING INITIATED
+        </h1>
+      </header>
+      <div class="main-content">
+        <i class="fa fa-cogs main-content__checkmark" id="checkmark"></i>
+        <p class="main-content__body" data-lead-id="main-content-body">
+          Thank you for your submission! Our chatbot training process has
+          started. We will notify you once the chatbot is ready.
+        </p>
+      </div>
+      <footer class="site-footer" id="footer">
+        <p class="site-footer__fineprint" id="fineprint">
+          jellyfishtechnologies ©2024 | All Rights Reserved
+        </p>
+      </footer>
+    </div>
+    <script>
+      document
+        .getElementById("contact-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          // Show the bot message
+          document.getElementById("botMessage").style.display = "block";
+          document.getElementById("overlay").style.display = "block";
+          document.getElementById("container").classList.add("blur");
 
-    <script src="app.js"></script>
+          setTimeout(function () {
+            document.getElementById("botMessage").style.display = "none";
+            document.getElementById("overlay").style.display = "none";
+            document.getElementById("container").classList.remove("blur");
+          }, 5000);
+          document.getElementById("contact-form").reset();
+        });
+    </script>
   </body>
+  <script src="/front-end/app.js"></script>
 </html>
