@@ -28,9 +28,10 @@ document
       company_name: formData.get("company_name"),
       email: formData.get("email"),
       base_link: formData.get("base_link"),
+      deployment_link: formData.get("deployment_location"),
+      chatbot_name: formData.get("chatbot_name"),
     };
-
-    const fastapiUrl = "http://127.0.0.1:8000/init_company/";
+    const fastapiUrl = "http://64.227.160.209/init_company/";
 
     fetch(fastapiUrl, {
       method: "POST",
@@ -43,7 +44,6 @@ document
       .then((data) => {
         console.log("FastAPI response:", data);
         // Optionally, handle the response from FastAPI here
-        alert("Thank you for contacting us!");
         // Optionally reset the form
         document.getElementById("contact-form").reset();
       })

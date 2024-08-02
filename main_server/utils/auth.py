@@ -21,13 +21,13 @@ async def get_current_user(request: Request) -> dict:
         raise HTTPException(status_code=401, detail="Invalid token type")
     
     origin_header = request.headers.get("Origin")
-    if not origin_header:
+    if not  origin_header:
         raise HTTPException(status_code=403, detail="Origin header missing")
 
     if not token:
         raise HTTPException(status_code=401, detail="Token missing")
 
     user = get_user_from_token(token)
-    if origin_header not in user["deploymnet_url"]:
-        raise HTTPException(status_code=403, detail="Origin not allowed restricted")
+    # if origin_header not in user["deploymnet_url"]:
+    #     raise HTTPException(status_code=403, detail="Origin not allowed restricted")
     return user
