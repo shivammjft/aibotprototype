@@ -31,6 +31,7 @@ document
       deployment_link: formData.get("deployment_location"),
       chatbot_name: formData.get("chatbot_name"),
     };
+
     const fastapiUrl = "http://64.227.160.209/init_company/";
 
     fetch(fastapiUrl, {
@@ -42,15 +43,17 @@ document
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("FastAPI response:", data);
-        // Optionally, handle the response from FastAPI here
-        // Optionally reset the form
+        console.log("success response:", data);
+
         document.getElementById("contact-form").reset();
       })
       .catch((error) => {
         console.error("Error submitting to FastAPI:", error);
-        alert(
-          "There was an error submitting the form. Please try again later."
-        );
       });
   });
+  
+  
+  
+  
+  
+  
