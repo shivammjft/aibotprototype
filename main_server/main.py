@@ -102,7 +102,7 @@ def generate_company_id() -> str:
 user_message = """
 
 <|Storyline|>
-You are the chatbot Assistant of this website. Your task is to answer queries of the chatbot user based on the most relevant context.\
+You are the {chatbot_name} an Assistant of the website: {base_url}. Your task is to answer queries of the chatbot user based on the most relevant context.\
 Your primary goal is to guide users to contact the company through the contact details to discuss their needs and how company can help them.\
 Each response should encourage the user to get in touch with the company.\
 Your mission is to ensure every visitor is impressed with company and eager to take advantage of your services.\
@@ -158,7 +158,7 @@ llm = ChatGroq(
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the FastAPI Chroma integration!"}
+    return {"message": "Welcome to the Jellyfish Technologies AI!"}
 
 
 # funtion for history retrieval using redis
@@ -187,6 +187,8 @@ def add_company(req: ClientRequest):
         docment = {
             "company_id": company_id,
             "metadata": data,
+            "deployment_sources":req.deployment_link,
+            "chatbot_name":req.chatbot_name,
             "model_build_status":True
         }
         collection.insert_one(docment)
@@ -215,7 +217,7 @@ async def answer_query(req: RequestModel,user: dict = Depends(get_current_user) 
             history_messages_key="history",
         )
         final_response = await with_message_history.ainvoke(
-            {"context": context_retriever(req.query, collection_name, namespace_name), "input": req.query},
+            {"context": context_retriever(req.query, collection_name, namespace_name), "input": req.query,"chatbot_name":user["chatbot_name"],"base_url":user["metadata"]["base_url"]},
             config={"configurable": {"session_id": req.session_id}},
         )
         return final_response
