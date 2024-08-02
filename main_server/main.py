@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from langchain_core.output_parsers import StrOutputParser
 import uuid
+import redis
 from kafka import KafkaProducer
 from typing import Optional
 from fastapi import  HTTPException, Depends
@@ -217,7 +218,7 @@ async def answer_query(req: RequestModel,user: dict = Depends(get_current_user) 
             history_messages_key="history",
         )
         final_response = await with_message_history.ainvoke(
-            {"context": context_retriever(req.query, collection_name, namespace_name), "input": req.query,"chatbot_name":user["chatbot_name"],"base_url":user["metadata"]["base_url"]},
+            {"context": context_retriever(req.query, collection_name, namespace_name), "input": req.query,"chatbot_name":user["chatbot_name"],"base_url":user["metadata"]["base_link"]},
             config={"configurable": {"session_id": req.session_id}},
         )
         return final_response

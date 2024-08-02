@@ -185,7 +185,7 @@ textarea.input {
   opacity: 0;
   transition: 0.3s;
   height: 5px;
-  background-color: #E3A5C7; /* Soft Pink */
+  background-color: #694F8E; /* Soft Pink */
   top: 50%;
   transform: translateY(-50%);
 }
