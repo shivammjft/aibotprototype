@@ -7,6 +7,7 @@ import smtplib
 from email.mime.text import MIMEText
 from datetime import datetime
 import time
+from constants.email_constants import html_template
 from utils.text_processing_and_chunking import preprocess_text, chunk_text
 from langchain_pinecone import PineconeVectorStore
 from pinecone import Pinecone, ServerlessSpec
@@ -20,11 +21,11 @@ load_dotenv()
 def send_email_smtp(subject, body, recipients):
     sender = os.getenv("SENDER")
     password = os.getenv("PASSWORD")
-    msg = MIMEText(body)
+    msg = MIMEText(body, 'plain')
     msg['Subject'] = subject
     msg['From'] = sender
     msg['To'] = recipients
-    
+
     try:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp_server:
             smtp_server.login(sender, password)
@@ -130,90 +131,34 @@ async def run(consumer,collection):
                 print("----------------Crawling Data------------------------")
                 docs =parallel_load(links,os.cpu_count())
                 await prepare_DB(docs, collection_name, company_id)
+                API_KEY = company_id
+                email = collection_metadata["email"]
+                company_name = collection_metadata["company_name"]
+                base_link = collection_metadata["base_link"]
+                chatbot_name = company_document["chatbot_name"]
                 text = f"""
-                Description: The AI model is trained. Now you can use the credentials to access your personal AI bot at the given link.
+                 The AI model is trained. Now you can use the credentials to access your personal AI bot.
                 
 
                 
                 Id: {company_id}
                 Email: {email}
-                Company Name: {collection_metadata["company_name"]}
-                Base Url: {collection_metadata["base_link"]}
+                Company Name: {company_name}
+                Base Url: {base_link}
                 
 
-
+                Copy the code snippet below and insert it into your website's footer or header before the closing </body> tag without any modification.
 
                 code_snippet:
                 
-                <!DOCTYPE html>
-                <html lang="en">
-                  <head>
-                    <meta charset="UTF-8" />
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                    <title>{collection_metadata["company_name"]}</title>
-                    <link rel="stylesheet" href="https://aibotfiles.vercel.app/style.css" />
-                    <link
-                      rel="icon"
-                      type="image/x-icon"
-                      href="https://aibotfiles.vercel.app/logo.png"
-                    />
-                  </head>
-                  <body>
-                    <div class="container">
-                      <div class="bot-container" style="display: none">
-                        <header>
-                          <div class="title-bar">
-                            <img src="https://aibotfiles.vercel.app/bot.png" class="logo" />
-                            <h1 class="company-name">{collection_metadata["company_name"]}</h1>
-                          </div>
-                          <div class="action">
-                            <button id="up-arrow" title="Go to top">
-                              <img src="https://aibotfiles.vercel.app/uparrow.png" />
-                            </button>
-                            <button id="minimize" title="Minimize">
-                              <img src="https://aibotfiles.vercel.app/minus.png" />
-                            </button>
-                            <button id="clear" title="Clear chat">
-                              <img src="https://aibotfiles.vercel.app/delete.png" />
-                            </button>
-                          </div>
-                        </header>
-                        <section>
-                          <div class="initial-greetings">
-                            <img src="https://aibotfiles.vercel.app/bot.png" />
-                            <span class="initial-message"
-                              >Welcome! I'm {company_document["chatbot_name"]}, How can I assist you today?</span
-                            >
-                          </div>
-                          <div class="static-questions"></div>
-                        </section>
-                        <hr />
-                        <footer>
-                          <form id="query-form" autocomplete="off">
-                            <input
-                              type="text"
-                              placeholder="Type your message here.."
-                              id="query"
-                            />
-                            <input type="hidden" id="api-key" value={company_id} />
-                            <button type="submit" title="Send message">
-                              <img src="https://aibotfiles.vercel.app/send-message.png" />
-                            </button>
-                          </form>
-                          <div><span>&copy;</span> Powered by Jellyfish Technologies</div>
-                        </footer>
-                      </div>
-                      <button class="bot-button" title="Jelly">
-                        <img src="https://aibotfiles.vercel.app/bot.png" />
-                      </button>
-                    </div>
-                    <script src="https://aibotfiles.vercel.app/script.js"></script>
-                  </body>
-                </html>
-
+                <script
+                  id="ai-jellyfishbot"
+                  src="https://aibotfiles.vercel.app/script.js"
+                  defer >
+                  {API_KEY},{company_name},{chatbot_name}
+                </script>
                 """
-                print(text)
-                send_email_smtp("AI Notification",text,email)
+                send_email_smtp("Jellyfish AI Bot Notification",text,email)
                 print("ENDED ",datetime.now())
             else:
                 print(f"Company with ID {company_id} not found in MongoDB.") 
