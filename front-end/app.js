@@ -51,9 +51,3 @@ document
         console.error("Error submitting to FastAPI:", error);
       });
   });
-  
-  
-  
-  
-  
-  
