@@ -151,6 +151,7 @@ function App() {
                   className={`input ${focus.email ? "focus" : ""}`}
                   value={formData.email}
                   onChange={handleChange}
+                  required
                 />
                 <label htmlFor="email">Your Email</label>
                 <span>Enter Your Email</span>
@@ -162,6 +163,7 @@ function App() {
                   className={`input ${focus.company_name ? "focus" : ""}`}
                   value={formData.company_name}
                   onChange={handleChange}
+                  required
                 ></textarea>
                 <label htmlFor="company_name">Company Name</label>
                 <span>Enter Your Company Name</span>
@@ -173,6 +175,7 @@ function App() {
                   className={`input ${focus.chatbot_name ? "focus" : ""}`}
                   value={formData.chatbot_name}
                   onChange={handleChange}
+                  required
                 />
                 <label htmlFor="chatbot_name">Chatbot Name</label>
                 <span>Enter Your Chatbot Name</span>
@@ -184,6 +187,7 @@ function App() {
                   className={`input ${focus.base_link ? "focus" : ""}`}
                   value={formData.base_link}
                   onChange={handleChange}
+                  required
                 />
                 <label htmlFor="base_link">Source URL</label>
                 <span>Enter Your Source URL</span>
@@ -195,6 +199,7 @@ function App() {
                   className={`input ${focus.deployment_link ? "focus" : ""}`}
                   value={formData.deployment_link}
                   onChange={handleChange}
+                  required
                 />
                 <label htmlFor="deployment_link">Deployment Location</label>
                 <span>Enter Your Deployment Location</span>

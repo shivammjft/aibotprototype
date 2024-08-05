@@ -232,4 +232,4 @@ async def answer_query(req: RequestModel,user: dict = Depends(get_current_user) 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
