@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
+
 function App() {
-  const inputs = document.querySelectorAll(".input");
+  const [popupVisible, setPopupVisible] = useState(false);
+
   const [formData, setFormData] = useState({
     email: "",
     company_name: "",
@@ -19,22 +21,34 @@ function App() {
     deployment_link: false,
   });
 
-  function focusFunc() {
-    let parent = this.parentNode;
-    parent.classList.add("focus");
-  }
+  useEffect(() => {
+    const inputs = document.querySelectorAll(".input");
 
-  function blurFunc() {
-    let parent = this.parentNode;
-    if (this.value == "") {
-      parent.classList.remove("focus");
+    function focusFunc(e) {
+      let parent = e.target.parentNode;
+      parent.classList.add("focus");
     }
-  }
 
-  inputs.forEach((input) => {
-    input.addEventListener("focus", focusFunc);
-    input.addEventListener("blur", blurFunc);
-  });
+    function blurFunc(e) {
+      let parent = e.target.parentNode;
+      if (e.target.value === "") {
+        parent.classList.remove("focus");
+      }
+    }
+
+    inputs.forEach((input) => {
+      input.addEventListener("focus", focusFunc);
+      input.addEventListener("blur", blurFunc);
+    });
+
+    return () => {
+      inputs.forEach((input) => {
+        input.removeEventListener("focus", focusFunc);
+        input.removeEventListener("blur", blurFunc);
+      });
+    };
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -54,6 +68,7 @@ function App() {
       })
       .then((response) => {
         console.log("Success response:", response.data);
+        setPopupVisible(true);
         setFormData({
           email: "",
           company_name: "",
@@ -136,7 +151,6 @@ function App() {
                   className={`input ${focus.email ? "focus" : ""}`}
                   value={formData.email}
                   onChange={handleChange}
-                  required
                 />
                 <label htmlFor="email">Your Email</label>
                 <span>Enter Your Email</span>
@@ -148,7 +162,6 @@ function App() {
                   className={`input ${focus.company_name ? "focus" : ""}`}
                   value={formData.company_name}
                   onChange={handleChange}
-                  required
                 ></textarea>
                 <label htmlFor="company_name">Company Name</label>
                 <span>Enter Your Company Name</span>
@@ -160,7 +173,6 @@ function App() {
                   className={`input ${focus.chatbot_name ? "focus" : ""}`}
                   value={formData.chatbot_name}
                   onChange={handleChange}
-                  required
                 />
                 <label htmlFor="chatbot_name">Chatbot Name</label>
                 <span>Enter Your Chatbot Name</span>
@@ -172,7 +184,6 @@ function App() {
                   className={`input ${focus.base_link ? "focus" : ""}`}
                   value={formData.base_link}
                   onChange={handleChange}
-                  required
                 />
                 <label htmlFor="base_link">Source URL</label>
                 <span>Enter Your Source URL</span>
@@ -184,7 +195,6 @@ function App() {
                   className={`input ${focus.deployment_link ? "focus" : ""}`}
                   value={formData.deployment_link}
                   onChange={handleChange}
-                  required
                 />
                 <label htmlFor="deployment_link">Deployment Location</label>
                 <span>Enter Your Deployment Location</span>
@@ -194,8 +204,25 @@ function App() {
           </div>
         </div>
       </div>
+      {popupVisible && (
+        <Popup
+          message="Thank you for trusting us. Your AI bot is training well. We will send you an email with the bot details as soon as the training is complete and it is ready to use."
+          onClose={() => setPopupVisible(false)}
+        />
+      )}
     </div>
   );
 }
+
+const Popup = ({ message, onClose }) => {
+  return (
+    <div className="popup-overlay">
+      <div className="popup-content">
+        <p>{message}</p>
+        <button onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+};
 
 export default App;
