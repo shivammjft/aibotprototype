@@ -49,6 +49,14 @@ function App() {
     };
   }, []);
 
+  function snackbarShow() {
+    var x = document.getElementById("snackbar");
+    x.className = "show";
+    setTimeout(function () {
+      x.className = x.className.replace("show", "");
+    }, 3000);
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -68,7 +76,7 @@ function App() {
       })
       .then((response) => {
         console.log("Success response:", response.data);
-        setPopupVisible(true);
+        snackbarShow();
         setFormData({
           email: "",
           company_name: "",
@@ -83,139 +91,140 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <div className="overlay" id="overlay"></div>
-      <div className="logo-container">
-        <img
-          src="logo.png"
-          alt="Jellyfish Technologies Logo"
-          className="logo"
-        />
-      </div>
-      <div className="container">
-        <span className="big-circle"></span>
-        <img src="img/shape.png" className="square" alt="" />
-        <div className="form">
-          <div className="contact-info">
-            <h3 className="title">Let's get in touch</h3>
-            <p className="text">
-              Jellyfish Technologies is your go-to partner for innovative
-              chatbot solutions and custom software development. With over 13
-              years of experience and 4000+ successful projects, we empower
-              businesses with cutting-edge technology.
-            </p>
+    <>
+      <div className="App">
+        <div className="overlay" id="overlay"></div>
+        <div className="logo-container">
+          <img
+            src="logo.png"
+            alt="Jellyfish Technologies Logo"
+            className="logo"
+          />
+        </div>
+        <div className="container">
+          <span className="big-circle"></span>
+          <img src="img/shape.png" className="square" alt="" />
+          <div className="form">
+            <div className="contact-info">
+              <h3 className="title">Let's get in touch</h3>
+              <p className="text">
+                Jellyfish Technologies is your go-to partner for innovative
+                chatbot solutions and custom software development. With over 13
+                years of experience and 4000+ successful projects, we empower
+                businesses with cutting-edge technology.
+              </p>
 
-            <div className="info">
-              <div className="information">
-                <i className="fas fa-map-marker-alt"></i> &nbsp; &nbsp;
-                <p>
-                  D5 3rd floor, Logix Infotech Park, D Block, Sector 59, Noida,
-                  Uttar Pradesh 201301
-                </p>
+              <div className="info">
+                <div className="information">
+                  <i className="fas fa-map-marker-alt"></i> &nbsp; &nbsp;
+                  <p>
+                    D5 3rd floor, Logix Infotech Park, D Block, Sector 59,
+                    Noida, Uttar Pradesh 201301
+                  </p>
+                </div>
+                <div className="information">
+                  <i className="fas fa-envelope"></i> &nbsp; &nbsp;
+                  <p>contact@jellyfishtechnologies.com</p>
+                </div>
               </div>
-              <div className="information">
-                <i className="fas fa-envelope"></i> &nbsp; &nbsp;
-                <p>contact@jellyfishtechnologies.com</p>
+
+              <div className="social-media">
+                <p>Connect with us :</p>
+                <div className="social-icons">
+                  <a href="https://www.facebook.com/teamjft/?locale=hi_IN&_rdr">
+                    <i className="fab fa-facebook-f"></i>
+                  </a>
+                  <a href="https://x.com/teamjft?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor">
+                    <i className="fab fa-twitter"></i>
+                  </a>
+                  <a href="https://www.instagram.com/teamjft/?hl=en">
+                    <i className="fab fa-instagram"></i>
+                  </a>
+                  <a href="https://www.linkedin.com/company/teamjft">
+                    <i className="fab fa-linkedin-in"></i>
+                  </a>
+                </div>
               </div>
             </div>
 
-            <div className="social-media">
-              <p>Connect with us :</p>
-              <div className="social-icons">
-                <a href="https://www.facebook.com/teamjft/?locale=hi_IN&_rdr">
-                  <i className="fab fa-facebook-f"></i>
-                </a>
-                <a href="https://x.com/teamjft?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor">
-                  <i className="fab fa-twitter"></i>
-                </a>
-                <a href="https://www.instagram.com/teamjft/?hl=en">
-                  <i className="fab fa-instagram"></i>
-                </a>
-                <a href="https://www.linkedin.com/company/teamjft">
-                  <i className="fab fa-linkedin-in"></i>
-                </a>
-              </div>
+            <div className="contact-form">
+              <span className="circle one"></span>
+              <span className="circle two"></span>
+              <form id="contact-form" onSubmit={handleSubmit}>
+                <h3 className="title">Contact us</h3>
+                <div className="input-container">
+                  <input
+                    type="email"
+                    name="email"
+                    className={`input ${focus.email ? "focus" : ""}`}
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                  <label htmlFor="email">Your Email</label>
+                  <span>Enter Your Email</span>
+                </div>
+
+                <div className="input-container textarea">
+                  <textarea
+                    name="company_name"
+                    className={`input ${focus.company_name ? "focus" : ""}`}
+                    value={formData.company_name}
+                    onChange={handleChange}
+                    required
+                  ></textarea>
+                  <label htmlFor="company_name">Company Name</label>
+                  <span>Enter Your Company Name</span>
+                </div>
+                <div className="input-container">
+                  <input
+                    type="text"
+                    name="chatbot_name"
+                    className={`input ${focus.chatbot_name ? "focus" : ""}`}
+                    value={formData.chatbot_name}
+                    onChange={handleChange}
+                    required
+                  />
+                  <label htmlFor="chatbot_name">Chatbot Name</label>
+                  <span>Enter Your Chatbot Name</span>
+                </div>
+                <div className="input-container">
+                  <input
+                    type="url"
+                    name="base_link"
+                    className={`input ${focus.base_link ? "focus" : ""}`}
+                    value={formData.base_link}
+                    onChange={handleChange}
+                    required
+                  />
+                  <label htmlFor="base_link">Source URL</label>
+                  <span>Enter Your Source URL</span>
+                </div>
+                <div className="input-container">
+                  <input
+                    type="url"
+                    name="deployment_link"
+                    className={`input ${focus.deployment_link ? "focus" : ""}`}
+                    value={formData.deployment_link}
+                    onChange={handleChange}
+                    required
+                  />
+                  <label htmlFor="deployment_link">Deployment Location</label>
+                  <span>Enter Your Deployment Location</span>
+                </div>
+                <input type="submit" value="Send" className="btn" />
+              </form>
             </div>
-          </div>
-
-          <div className="contact-form">
-            <span className="circle one"></span>
-            <span className="circle two"></span>
-
-            <form id="contact-form" onSubmit={handleSubmit}>
-              <h3 className="title">Contact us</h3>
-              <div className="input-container">
-                <input
-                  type="email"
-                  name="email"
-                  className={`input ${focus.email ? "focus" : ""}`}
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-                <label htmlFor="email">Your Email</label>
-                <span>Enter Your Email</span>
-              </div>
-
-              <div className="input-container textarea">
-                <textarea
-                  name="company_name"
-                  className={`input ${focus.company_name ? "focus" : ""}`}
-                  value={formData.company_name}
-                  onChange={handleChange}
-                  required
-                ></textarea>
-                <label htmlFor="company_name">Company Name</label>
-                <span>Enter Your Company Name</span>
-              </div>
-              <div className="input-container">
-                <input
-                  type="text"
-                  name="chatbot_name"
-                  className={`input ${focus.chatbot_name ? "focus" : ""}`}
-                  value={formData.chatbot_name}
-                  onChange={handleChange}
-                  required
-                />
-                <label htmlFor="chatbot_name">Chatbot Name</label>
-                <span>Enter Your Chatbot Name</span>
-              </div>
-              <div className="input-container">
-                <input
-                  type="url"
-                  name="base_link"
-                  className={`input ${focus.base_link ? "focus" : ""}`}
-                  value={formData.base_link}
-                  onChange={handleChange}
-                  required
-                />
-                <label htmlFor="base_link">Source URL</label>
-                <span>Enter Your Source URL</span>
-              </div>
-              <div className="input-container">
-                <input
-                  type="text"
-                  name="deployment_link"
-                  className={`input ${focus.deployment_link ? "focus" : ""}`}
-                  value={formData.deployment_link}
-                  onChange={handleChange}
-                  required
-                />
-                <label htmlFor="deployment_link">Deployment Location</label>
-                <span>Enter Your Deployment Location</span>
-              </div>
-              <input type="submit" value="Send" className="btn" />
-            </form>
           </div>
         </div>
       </div>
-      {popupVisible && (
-        <Popup
-          message="Thank you for trusting us. Your AI bot is training well. We will send you an email with the bot details as soon as the training is complete and it is ready to use."
-          onClose={() => setPopupVisible(false)}
-        />
-      )}
-    </div>
+      <div id="snackbar">
+        Thank you for your response. We appreciate your patience as we proceed
+        with training your bot. We will send you an email with further details
+        once the training process is complete. Please keep an eye on your inbox
+        for updates.
+      </div>
+    </>
   );
 }
 
