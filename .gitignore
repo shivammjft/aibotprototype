@@ -1,1 +1,6 @@
 .env
+proces
+main
+__pycache__
+chatbot
+.pyc

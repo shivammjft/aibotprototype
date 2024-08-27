@@ -2,12 +2,12 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from langchain_core.output_parsers import StrOutputParser
 import uuid
-import redis
-from kafka import KafkaProducer
+import pika
 from typing import Optional
 from fastapi import  HTTPException, Depends
 from langchain_openai import OpenAIEmbeddings
 import os
+from langchain_openai import ChatOpenAI
 from typing import Optional
 from langchain_pinecone import PineconeVectorStore
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -15,7 +15,6 @@ from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_groq import ChatGroq
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from kafka import KafkaProducer
 from utils.auth import get_current_user
 from datetime import datetime
 from models.schems import Company,ClientRequest
@@ -42,14 +41,6 @@ os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
 os.getenv("LANGCHAIN_API_KEY")
 os.environ["LANGCHAIN_PROJECT"] = "Chatbot Doc Mapping"
 
-
-producer = KafkaProducer(
-    bootstrap_servers=f"kafka-33abc88c-jellyfishtechnologies-4169.b.aivencloud.com:27373",
-    security_protocol="SSL",
-    ssl_cafile="ca.pem",
-    ssl_certfile="service.cert",
-    ssl_keyfile="service.key",
-)
 
 def on_send_success(record_metadata):
     print(f"Message sent to {record_metadata.topic} partition {record_metadata.partition} with offset {record_metadata.offset}")
@@ -134,12 +125,10 @@ Strictly don't provide response in markdown\
 """
 
 
-
 human_message_template = """
 <|Question|>
 {question}
 """
-
 
 
 # creating prompt
@@ -157,6 +146,8 @@ llm = ChatGroq(
     groq_api_key=os.getenv("GROQ_API_KEY"),
     model_name="llama3-70b-8192",
 )
+
+llm_4o = ChatOpenAI(model="gpt-4o-mini")
 
 
 @app.get("/")
@@ -194,10 +185,22 @@ def add_company(req: ClientRequest):
             "chatbot_name":req.chatbot_name,
             "model_build_status":True
         }
+        print(docment)
         collection.insert_one(docment)
-        TOPIC_NAME ="COMPANY_INIT"
-        producer.send(TOPIC_NAME, company_id.encode('utf-8'))
-        producer.flush() 
+        QUEUE_NAME ="COMPANY_INIT"
+        connection = pika.BlockingConnection(
+        pika.ConnectionParameters(host='localhost'))
+        channel = connection.channel()
+        channel.queue_declare(queue=QUEUE_NAME, durable=True)
+        channel.basic_publish(
+            exchange='',
+            routing_key=QUEUE_NAME,
+            body=company_id,
+            properties=pika.BasicProperties(
+                delivery_mode=pika.DeliveryMode.Persistent
+            )
+        )
+        connection.close()
         print(f"Message sent: {company_id}")
         return {"company": company_id}
     except Exception as e:
@@ -212,7 +215,7 @@ async def answer_query(req: RequestModel,user: dict = Depends(get_current_user) 
     try:
         collection_name = 'companyinit'
         namespace_name = user["company_id"]
-        rag_chain = prompt | llm | StrOutputParser()
+        rag_chain = prompt | llm_4o | StrOutputParser()
         with_message_history = RunnableWithMessageHistory(
             rag_chain,
             get_message_history,

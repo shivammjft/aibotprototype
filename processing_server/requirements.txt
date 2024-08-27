@@ -1,9 +1,7 @@
 aiohttp
 beautifulsoup4==4.12.3
 fastapi==0.112.0
-kafka_python==2.0.2
 langchain==0.2.12
-langchain_chroma==0.1.2
 langchain_community==0.2.11
 langchain_openai==0.1.20
 langchain_pinecone==0.1.3
@@ -13,3 +11,4 @@ pymongo==4.5.0
 python-dotenv==1.0.1
 Requests==2.32.3
 uvicorn==0.30.5
+pika==1.3.2

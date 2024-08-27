@@ -11,3 +11,4 @@ pymongo==4.5.0
 python-dotenv==1.0.1
 redis==5.0.7
 uvicorn==0.30.5
+pika==1.3.2
