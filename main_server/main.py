@@ -178,15 +178,15 @@ def add_company(req: ClientRequest):
         "updated_at":datetime.now(),
         "links":None
         }
-        docment = {
+        document = {
             "company_id": company_id,
             "metadata": data,
             "deployment_sources":req.deployment_link,
             "chatbot_name":req.chatbot_name,
             "model_build_status":True
         }
-        print(docment)
-        collection.insert_one(docment)
+        print(document)
+        collection.insert_one(document)
         QUEUE_NAME ="COMPANY_INIT"
         connection = pika.BlockingConnection(
         pika.ConnectionParameters(host='localhost'))
