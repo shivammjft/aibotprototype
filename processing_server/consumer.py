@@ -94,6 +94,8 @@ def callback(ch, method, properties, body):
         chatbot_name=chatbot_name,
         template=bot_ready_email_template
     )
+        print(" [x] Done")
+        ch.basic_ack(delivery_tag=method.delivery_tag)
         print("ENDED ", datetime.now())
     else:
         print(f"Company with ID {company_id} not found in MongoDB.") 
