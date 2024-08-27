@@ -10,7 +10,6 @@ import os
 from langchain_qdrant import QdrantVectorStore
 from langchain_openai import ChatOpenAI
 from typing import Optional
-from langchain_pinecone import PineconeVectorStore
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -42,9 +41,6 @@ os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
 os.getenv("LANGCHAIN_API_KEY")
 os.environ["LANGCHAIN_PROJECT"] = "Chatbot Doc Mapping"
 
-
-def on_send_success(record_metadata):
-    print(f"Message sent to {record_metadata.topic} partition {record_metadata.partition} with offset {record_metadata.offset}")
 
 
 def context_retriever(query, collection_name, embeddings=OpenAIEmbeddings()):
@@ -144,13 +140,15 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 # declaring llm
-llm = ChatGroq(
-    temperature=0.0,
-    groq_api_key=os.getenv("GROQ_API_KEY"),
-    model_name="llama3-70b-8192",
-)
+# llm = ChatGroq(
+#     temperature=0.0,
+#     groq_api_key=os.getenv("GROQ_API_KEY"),
+#     model_name="llama3-70b-8192",
+# )
 
 llm_4o = ChatOpenAI(model="gpt-4o-mini")
+
+llm = ChatOpenAI(api_key=os.getenv("DEEP_INFRA_API_KEY"), model="meta-llama/Meta-Llama-3-70B-Instruct", base_url="https://api.deepinfra.com/v1/openai")
 
 
 @app.get("/")
@@ -161,6 +159,7 @@ def read_root():
 # funtion for history retrieval using redis
 def get_message_history(session_id: str) -> RedisChatMessageHistory:
     return RedisChatMessageHistory(session_id, url=os.getenv("REDIS_URL"))
+
 
 
 @app.post("/init_company/")
