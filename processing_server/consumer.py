@@ -62,6 +62,7 @@ async def prepare_DB(docs, collection_name):
     print("----------------Storing in Pinecone Index----------------")
     vector_store.add_documents(documents=text_chunks, ids=uuids)
 
+
 def callback(ch, method, properties, body):
     global bot_ready_email_template
     message = body.decode()

@@ -60,6 +60,22 @@ Copy code
 sudo docker run --network chatbotnetwork -d -p 9000:9000 chatbotprocess
 ```
 
+### 4. Run the RabbitMQ Server
+
+```bash
+Copy code
+docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
+```
+
+### 4. Run the Qdrant Server
+
+```bash
+Copy code
+docker run -p 6333:6333 -p 6334:6334 \
+    -v $(pwd)/qdrant_storage:/qdrant/storage:z \
+    qdrant/qdrant
+```
+
 ### Notes
 
 Ensure that Docker Daemon is running before executing the commands.
