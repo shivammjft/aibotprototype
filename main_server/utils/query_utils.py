@@ -4,7 +4,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import ChatOpenAI
 from langchain_community.chat_message_histories import RedisChatMessageHistory
-
+import tiktoken
 
 llm = ChatOpenAI(api_key=os.getenv("DEEP_INFRA_API_KEY"), model="meta-llama/Meta-Llama-3-70B-Instruct", base_url="https://api.deepinfra.com/v1/openai")
 
@@ -50,3 +50,10 @@ def context_retriever(query, collection_name, embeddings=OpenAIEmbeddings()):
         content = f"An error occurred: {str(e)}"
     
     return content
+
+
+def count_tokens(text):
+    tokenizer = tiktoken.get_encoding("cl100k_base")
+    tokens = tokenizer.encode(text)
+    return len(tokens)
+
