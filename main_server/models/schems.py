@@ -1,7 +1,13 @@
 from pydantic import BaseModel
-from typing import List , Dict
+from typing import List , Dict,Optional
 from datetime import datetime
 
+
+
+class RequestModel(BaseModel):
+    query: str
+    context: Optional[list[str]] = None
+    session_id: str
 
 class Company(BaseModel):
     name: str
