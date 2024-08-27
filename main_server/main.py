@@ -7,6 +7,7 @@ from typing import Optional
 from fastapi import  HTTPException, Depends
 from langchain_openai import OpenAIEmbeddings
 import os
+from langchain_qdrant import QdrantVectorStore
 from langchain_openai import ChatOpenAI
 from typing import Optional
 from langchain_pinecone import PineconeVectorStore
@@ -46,11 +47,13 @@ def on_send_success(record_metadata):
     print(f"Message sent to {record_metadata.topic} partition {record_metadata.partition} with offset {record_metadata.offset}")
 
 
-def context_retriever(query, collection_name, namespace_name, embeddings=OpenAIEmbeddings()):
+def context_retriever(query, collection_name, embeddings=OpenAIEmbeddings()):
     try:
-        vectorstore = PineconeVectorStore(index_name=collection_name, embedding=embeddings, namespace=namespace_name)
+
+        vectorstore = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=collection_name, url="http://localhost:6333")
         docs = vectorstore.similarity_search(query, k=5)
         if len(docs) != 0:
+
             content = ""
             for i in range(len(docs)):
                 try:
@@ -63,8 +66,8 @@ def context_retriever(query, collection_name, namespace_name, embeddings=OpenAIE
                 except Exception as e:
                     content = f"An error occurred while processing document {i}: {str(e)}"
         else:
-            content = "Frame a professional answer which shows the positive image of the company and should be relevant to the query"
-            
+            content = "Frame a professional answer which shows the positive image of the company and should be relevant to the query, don't answer on your own if you think question is not relevant to companies benfits"
+        
     except Exception as e:
         content = f"An error occurred: {str(e)}"
     

@@ -59,7 +59,7 @@ async def prepare_DB(docs, collection_name):
         embedding=embeddings,
     )
     
-    print("----------------Storing in Pinecone Index----------------")
+    print("----------------Storing in Qdrant Index----------------")
     vector_store.add_documents(documents=text_chunks, ids=uuids)
 
 
