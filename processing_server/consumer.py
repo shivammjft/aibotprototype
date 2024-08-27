@@ -2,16 +2,17 @@ import asyncio
 from langchain_openai import OpenAIEmbeddings
 import os
 from datetime import datetime
-import time
 from constants.email_constants import bot_ready_email_template
 from utils.mailjet import send_email_with_template
 from utils.text_processing_and_chunking import preprocess_text, chunk_text
-from langchain_pinecone import PineconeVectorStore
-from pinecone import Pinecone, ServerlessSpec
 from config.db import collection
 from dotenv import load_dotenv
 from utils.scraper_links import get_links
 from utils.process_links import parallel_load
+from qdrant_client import QdrantClient
+from uuid import uuid4
+from langchain_qdrant import QdrantVectorStore
+from qdrant_client.models import Distance, VectorParams
 
 
 load_dotenv()
@@ -26,7 +27,7 @@ async def process(url, company_id):
     docs = parallel_load(links, os.cpu_count())
     await prepare_DB(docs, company_id)
 
-async def prepare_DB(docs, namespace_name):
+async def prepare_DB(docs, collection_name):
     global TOPIC_NAME
     print("----------------Preparing Database--------------------")
 
@@ -40,32 +41,26 @@ async def prepare_DB(docs, namespace_name):
     print(len(text_chunks))
 
     print("----------------Creating Embeddings--------------------")
-    pinecone_api_key = os.environ.get("PINECONE_API_KEY")
-    pc = Pinecone(api_key=pinecone_api_key)
-
     embeddings = OpenAIEmbeddings()
 
     print("----------------Creating Index------------------------")
-    index_name = "companyinit"
 
-    existing_indexes = [index_info["name"] for index_info in pc.list_indexes()]
-    if index_name not in existing_indexes:
-        pc.create_index(
-            name=index_name,
-            dimension=1536,
-            metric="cosine",
-            spec=ServerlessSpec(
-                cloud='aws', 
-                region='us-east-1'
-            ) 
-        ) 
-        while not pc.describe_index(index_name).status["ready"]:
-            time.sleep(1)
+    uuids = [str(uuid4()) for _ in range(len(text_chunks))]
+    client = QdrantClient(url="http://localhost:6333", timeout=60)
+    print("Hi")
+    if not client.collection_exists(collection_name):
+        #print("Hi1")
+        client.create_collection(collection_name=collection_name,vectors_config=VectorParams(size=1536, distance=Distance.COSINE))
+        #print("Hi2")
+    print("----------------Storing in Qdrant Collection----------------")
+    vector_store = QdrantVectorStore(
+        client=client,
+        collection_name=collection_name,
+        embedding=embeddings,
+    )
     
     print("----------------Storing in Pinecone Index----------------")
-    PineconeVectorStore.from_documents(
-        text_chunks, embeddings, index_name=index_name, namespace=namespace_name
-    )
+    vector_store.add_documents(documents=text_chunks, ids=uuids)
 
 def callback(ch, method, properties, body):
     global bot_ready_email_template
