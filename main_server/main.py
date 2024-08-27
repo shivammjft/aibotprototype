@@ -1,9 +1,6 @@
-from fastapi import FastAPI, HTTPException
-import pika
+from fastapi import FastAPI
 import os
 from routers import auth,query,prepare
-from models.schems import Company,ClientRequest,RequestModel
-
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
