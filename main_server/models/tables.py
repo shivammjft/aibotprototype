@@ -1,5 +1,6 @@
 from config.db import Base 
-from sqlalchemy import Integer, Column, Boolean, String
+from datetime import datetime
+from sqlalchemy import Integer, Column, Boolean, String , DateTime,ForeignKey
 
 class Users(Base):
     __tablename__ = "users"
@@ -12,3 +13,43 @@ class Users(Base):
     hashed_password = Column(String(255))  
     is_active = Column(Boolean, default=True)
     role = Column(String(50))
+
+
+class Company(Base):
+    __tablename__ = "companies"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True) 
+    company_name = Column(String(255))
+    company_key = Column(String(255))
+    base_url = Column(String(255), unique=True) 
+    input_tokens = Column(Integer)  
+    output_tokens = Column(Integer)
+    created_date = Column(DateTime, default=datetime.now())
+
+
+class Chatbot_stats(Base):
+    __tablename__ = "chatbots"
+
+    chatbot_id = Column(Integer, primary_key=True)
+    company_id = Column(Integer, ForeignKey("companies.id"))
+    origin_url = Column(String(255))
+    company_name = Column(String(255))
+    total_input_tokens = Column(Integer)
+    total_output_tokens= Column(Integer)
+    total_queries = Column(Integer) 
+    last_query_time = Column(DateTime)
+
+class Queries(Base):
+
+    __tablename__ = "queries"
+
+    query_id = Column(Integer,primary_key=True)
+    company_id = Column(Integer, ForeignKey("companies.id"))
+    chatbot_id = Column(Integer,ForeignKey("chatbots.chatbot_id"))
+    session_id = Column(String(255))
+    query_text = Column(String(255))
+    input_tokens = Column(String(255))
+    output_tokens = Column(String(255))
+    query_time = Column(DateTime)
+    origin_url = Column(String(255))

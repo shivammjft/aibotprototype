@@ -43,7 +43,8 @@ def read_root():
     return {"message": "Welcome to the Jellyfish Technologies AI!"}
 
 app.include_router(prepare.router)
-app.include_router(query.router)
+# app.include_router(query.router)
+app.include_router(auth.router)
 
 
 if __name__ == "__main__":

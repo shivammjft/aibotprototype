@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 ##pymysql
 ##mysql -u root -p users
-DB_URL = "mysql+pymysql://root:Jft%40421@localhost:3306/users"
+DB_URL = "mysql+pymysql://root:123456@localhost:3306/chatbotserver"
 
 engine = create_engine(
     DB_URL
