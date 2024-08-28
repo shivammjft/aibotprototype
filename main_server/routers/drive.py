@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import requests
 from pathlib import Path
 import re
+import zipfile
+import io
 
 app = FastAPI()
 
@@ -43,36 +45,52 @@ def download_file_from_google_drive(file_id: str) -> (bytes, str):
     else:
         raise HTTPException(status_code=response.status_code, detail="Failed to download file")
 
-@app.post("/download/")
-async def download_drive_file(drive_link: str = Form(...)):
-    # Extract the file ID from the provided Google Drive link
-    file_id = None
-    if "drive.google.com" in drive_link:
-        if "/d/" in drive_link:
-            file_id = drive_link.split("/d/")[1].split("/")[0]
-        elif "id=" in drive_link:
-            file_id = drive_link.split("id=")[1].split("&")[0]
+def download_folder_from_google_drive(folder_id: str, output_dir: Path):
+    # Use the Google Drive API to list all files in the folder and download them
+    folder_url = f"https://drive.google.com/drive/folders/{folder_id}?usp=sharing"
+    
+    # Simulate a direct download using a third-party service like gdown or using Google API
+    # Here, we use gdown for simplicity
+    # You need to install gdown using `pip install gdown`
+    
+    import gdown
+    
+    gdown.download_folder(url=folder_url, output=str(output_dir))
 
-    if not file_id:
+@app.post("/download/")
+async def download_drive_content(drive_link: str = Form(...)):
+    # Extract the ID from the provided Google Drive link
+    folder_or_file_id = None
+    is_folder = False
+    if "drive.google.com" in drive_link:
+        if "/folders/" in drive_link:
+            folder_or_file_id = drive_link.split("/folders/")[1].split("?")[0]
+            is_folder = True
+        elif "/d/" in drive_link:
+            folder_or_file_id = drive_link.split("/d/")[1].split("/")[0]
+        elif "id=" in drive_link:
+            folder_or_file_id = drive_link.split("id=")[1].split("&")[0]
+
+    if not folder_or_file_id:
         raise HTTPException(status_code=400, detail="Invalid Google Drive link")
 
     try:
-        # Download the file
-        file_data, filename = download_file_from_google_drive(file_id)
-        print(f"Downloaded {len(file_data)} bytes with filename {filename}.")
+        if is_folder:
+            # Download the entire folder
+            download_dir = Path(f"data/{folder_or_file_id}")
+            download_dir.mkdir(parents=True, exist_ok=True)
+            download_folder_from_google_drive(folder_or_file_id, download_dir)
+            return {"message": "Folder downloaded successfully", "download_dir": str(download_dir)}
+        else:
+            # Download a single file
+            file_data, filename = download_file_from_google_drive(folder_or_file_id)
+            download_dir = Path(f"data/{folder_or_file_id}")
+            download_dir.mkdir(parents=True, exist_ok=True)
+            file_path = download_dir / filename
+            with open(file_path, "wb") as file:
+                file.write(file_data)
+            return {"filename": str(file_path), "file_size": len(file_data), "content_type": filename.split('.')[-1]}
 
-        # Create a directory for the file using the file_id
-        download_dir = Path(f"data/{file_id}")
-        download_dir.mkdir(parents=True, exist_ok=True)
-        print(f"Directory created at: {download_dir}")
-
-        # Save the file to the created directory with the original name
-        file_path = download_dir / filename
-        with open(file_path, "wb") as file:
-            file.write(file_data)
-        print(f"File saved at: {file_path}")
-
-        return {"filename": str(file_path), "file_size": len(file_data), "content_type": filename.split('.')[-1]}
     except HTTPException as e:
         print(f"Error: {e.detail}")
         raise e
