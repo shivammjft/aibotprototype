@@ -1,9 +1,15 @@
-import os
-from pymongo import MongoClient
-from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-load_dotenv()
+##pymysql
+##mysql -u root -p users
+DB_URL = "mysql+pymysql://root:Jft%40421@localhost:3306/users"
 
-mongo_client = MongoClient(os.getenv('MONGO_URI'))
-db = mongo_client['AIBOT']  
-collection = db['company']  
+engine = create_engine(
+    DB_URL
+)
+
+SesssionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+Base = declarative_base()
