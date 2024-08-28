@@ -16,7 +16,7 @@ class Company(BaseModel):
 
 class ClientRequest(BaseModel):
     company_name : str
-    base_link : str
+    base_url : str
     email:str
     deployment_link:str
     chatbot_name: str
