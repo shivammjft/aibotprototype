@@ -4,10 +4,9 @@ from pydantic import BaseModel, field_validator
 from typing import Annotated
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import re 
-import mysql.connector
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
-from models import Users
+from models.tables import Users
 from config.db import SesssionLocal
 from sqlalchemy.orm import Session
 

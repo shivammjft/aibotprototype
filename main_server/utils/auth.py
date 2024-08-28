@@ -1,15 +1,26 @@
 from fastapi import Request, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from config.db import collection
-from typing import Optional
+from typing import Annotated
+from models.tables import Company
+from config.db import SesssionLocal
+from sqlalchemy.orm import Session
 
 
-def get_user_from_token(token: str) -> dict:
-    user = collection.find_one({"company_id": token})
-    if token: 
-        return user
-    else:
-        raise HTTPException(status_code=401, detail="Invalid token")
+
+def get_db():
+    db = SesssionLocal()
+    try:
+        yield db 
+    finally:
+        db.close()
+
+db_dependency = Annotated[Session, Depends(get_db)]
+
+def get_user_from_api_key(api_key: str,db:db_dependency) -> dict:
+    user  = db.query(Company).filter(Company.id == api_key) 
+    return user
+
 
 
 async def get_current_user(request: Request) -> dict:
@@ -27,7 +38,7 @@ async def get_current_user(request: Request) -> dict:
     if not token:
         raise HTTPException(status_code=401, detail="Token missing")
 
-    user = get_user_from_token(token)
+    user = get_user_from_api_key(token)
     # if origin_header not in user["deploymnet_url"]:
     #     raise HTTPException(status_code=403, detail="Origin not allowed restricted")
     return user
