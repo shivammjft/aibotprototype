@@ -1,9 +1,13 @@
 from fastapi import FastAPI
 import os
-from routers import auth,query,prepare
+from routers import auth,query,prepare,admin
 from dotenv import load_dotenv
+from config.db import Base,engine
 from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
+
+Base.metadata.create_all(bind = engine)
+
 
 load_dotenv()
 
@@ -43,8 +47,9 @@ def read_root():
     return {"message": "Welcome to the Jellyfish Technologies AI!"}
 
 app.include_router(prepare.router)
-# app.include_router(query.router)
+app.include_router(query.router)
 app.include_router(auth.router)
+app.include_router(admin.router)
 
 
 if __name__ == "__main__":
