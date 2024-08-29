@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends,status, HTTPException
+from fastapi.responses import JSONResponse
 from passlib.context import CryptContext
 from pydantic import BaseModel, field_validator
 from typing import Annotated
@@ -7,7 +8,7 @@ import re
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
 from models.tables import Users
-from config.db import SesssionLocal
+from config.db import SessionLocal
 from sqlalchemy.orm import Session
 
 
@@ -34,22 +35,22 @@ class UserBase(BaseModel):
     password: str
     role:str
 
-    @field_validator('password')
-    def validate_password(cls, v):
-        if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long.')
-        if not re.search(r'[A-Z]', v):
-            raise ValueError('Password must contain at least one uppercase letter.')
-        if not re.search(r'[a-z]', v):
-            raise ValueError('Password must contain at least one lowercase letter.')
-        if not re.search(r'[0-9]', v):
-            raise ValueError('Password must contain at least one numeric digit.')
-        if not re.search(r'[\W_]', v):  
-            raise ValueError('Password must contain at least one special character.')
-        return v
+    # @field_validator('password')
+    # def validate_password(cls, v):
+    #     if len(v) < 8:
+    #         raise ValueError('Password must be at least 8 characters long.')
+    #     if not re.search(r'[A-Z]', v):
+    #         raise ValueError('Password must contain at least one uppercase letter.')
+    #     if not re.search(r'[a-z]', v):
+    #         raise ValueError('Password must contain at least one lowercase letter.')
+    #     if not re.search(r'[0-9]', v):
+    #         raise ValueError('Password must contain at least one numeric digit.')
+    #     if not re.search(r'[\W_]', v):  
+    #         raise ValueError('Password must contain at least one special character.')
+    #     return v
 
 def get_db():
-    db = SesssionLocal()
+    db = SessionLocal()
     try:
         yield db 
     finally:
@@ -87,7 +88,6 @@ async def get_current_user(token: Annotated[str,Depends(oauth2_bearer)]):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="could not verify user")
     
-
 
 @router.post('/signup',status_code=status.HTTP_201_CREATED)
 async def signup(db: db_dependency,

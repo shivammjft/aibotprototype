@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field,EmailStr,HttpUrl
 from typing import List , Dict,Optional
 from datetime import datetime
 
@@ -8,6 +8,7 @@ class RequestModel(BaseModel):
     query: str
     context: Optional[list[str]] = None
     session_id: str
+    chatbot_id:str
 
 class Company(BaseModel):
     name: str
@@ -15,8 +16,10 @@ class Company(BaseModel):
 
 
 class ClientRequest(BaseModel):
-    company_name : str
-    base_url : str
-    email:str
-    deployment_link:str
-    chatbot_name: str
+    company_name : str = Field(min_length=3, max_length=100)
+    base_url : HttpUrl
+    email:str =EmailStr
+    deployment_url:Optional[HttpUrl]  
+    chatbot_name: str = Field(min_length=1, max_length=100)
+
+

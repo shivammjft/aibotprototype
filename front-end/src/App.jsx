@@ -9,16 +9,16 @@ function App() {
     email: "",
     company_name: "",
     chatbot_name: "",
-    base_link: "",
-    deployment_link: "",
+    base_url: "",
+    deployment_url: "",
   });
 
   const [focus, setFocus] = useState({
     email: false,
     company_name: false,
     chatbot_name: false,
-    base_link: false,
-    deployment_link: false,
+    base_url: false,
+    deployment_url: false,
   });
 
   useEffect(() => {
@@ -81,8 +81,8 @@ function App() {
           email: "",
           company_name: "",
           chatbot_name: "",
-          base_link: "",
-          deployment_link: "",
+          base_url: "",
+          deployment_url: "",
         });
       })
       .catch((error) => {
@@ -191,25 +191,25 @@ function App() {
                 <div className="input-container">
                   <input
                     type="url"
-                    name="base_link"
-                    className={`input ${focus.base_link ? "focus" : ""}`}
-                    value={formData.base_link}
+                    name="base_url"
+                    className={`input ${focus.base_url ? "focus" : ""}`}
+                    value={formData.base_url}
                     onChange={handleChange}
                     required
                   />
-                  <label htmlFor="base_link">Source URL</label>
+                  <label htmlFor="base_url">Source URL</label>
                   <span>Enter Your Source URL</span>
                 </div>
                 <div className="input-container">
                   <input
                     type="url"
-                    name="deployment_link"
-                    className={`input ${focus.deployment_link ? "focus" : ""}`}
+                    name="deployment_url"
+                    className={`input ${focus.deployment_url ? "focus" : ""}`}
                     value={formData.deployment_link}
                     onChange={handleChange}
                     required
                   />
-                  <label htmlFor="deployment_link">Deployment Location</label>
+                  <label htmlFor="deployment_url">Deployment Location</label>
                   <span>Enter Your Deployment Location</span>
                 </div>
                 <input type="submit" value="Send" className="btn" />
