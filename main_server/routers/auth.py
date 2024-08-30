@@ -31,6 +31,24 @@ class ValidationException(HTTPException):
     def __init__(self, detail: str):
         super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
+class loginUserData(BaseModel):
+    username : str
+    password: str
+
+    @field_validator('password')
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValidationException({"status":False, "mssg":'Password must be at least 8 characters long.'})       
+        if not re.search(r'[A-Z]', v):
+            raise ValidationException({"status":False, "mssg":'Password must contain at least one uppercase letter.'})       
+        if not re.search(r'[a-z]', v):
+            raise ValidationException({"status":False, "mssg":'Password must contain at least one lowercase letter.'})
+        if not re.search(r'[0-9]', v):
+            raise ValidationException({"status":False, "mssg":'Password must contain at least one numeric digit.'})
+        if not re.search(r'[\W_]', v):  
+            raise ValidationException({"status":False, "mssg":'Password must contain at least one special character.'})
+        return v
+
 class UserBase(BaseModel):
     username: str
     email :str
@@ -65,7 +83,7 @@ db_dependency = Annotated[Session, Depends(get_db)]
 def authenticate_user(username:str, password:str,db):
     user = db.query(Users).filter(Users.username == username).first()
     if not user:
-        raise ValidationException({"status":False, "mssg":'Username doesnot exists.'})       
+        raise ValidationException({"status":False, "mssg":'Username does not exists.'})       
     if not crypt.verify(password, user.hashed_password):
         raise ValidationException({status:False, "mssg":'Password does not match.'})       
     return user
@@ -96,7 +114,6 @@ async def get_current_user(token: Annotated[str,Depends(oauth2_bearer)]):
 @router.post('/signup',status_code=status.HTTP_201_CREATED)
 async def signup(db: db_dependency,
                  user:UserBase):
-    
     existing_user = db.query(Users).filter((Users.username == user.username) | (Users.email == user.email)).first()
 
     if existing_user:
@@ -117,15 +134,15 @@ async def signup(db: db_dependency,
     )
     db.add(create_user_model)
     db.commit()
-    return {"detail":{"status":True,"mssg":"Account Created Successfully!"}}
+    return JSONResponse(content={"detail":{"status":True,"mssg":"Account Created Successfully!"}})
 
 
 @router.post('/login')
-async def login(form_data : Annotated[OAuth2PasswordRequestForm, Depends()],
+async def login(form_data : loginUserData,
                 db: db_dependency):
     user =authenticate_user(form_data.username, form_data.password,db)
     # if not user:
     #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
     #                         detail="could not verify user.")
     token = create_access_token(user.username, user.role, user.id,timedelta(days=30))
-    return {"access_token":token,'token_type':'bearer'}
+    return JSONResponse(content={"access_token":token,'token_type':'bearer'})
