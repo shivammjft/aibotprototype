@@ -39,7 +39,7 @@ bot_ready_email_template = """<!DOCTYPE html>
             id="ai-jellyfishbot"<br>
             src="https://aibotfiles.vercel.app/script.js"<br>
             defer&gt;<br>
-            {{ API_KEY }},{{ company_name }},{{ chatbot_name }}<br>
+            {{ API_KEY }},{{ CHATBOT_KEY }},{{ company_name }},{{ chatbot_name }}<br>
             &lt;/script&gt;
         </div>
     </div>
