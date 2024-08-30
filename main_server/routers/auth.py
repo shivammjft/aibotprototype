@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends,status, HTTPException
-from fastapi.responses import JSONResponse
 from passlib.context import CryptContext
 from pydantic import BaseModel, field_validator
 from typing import Annotated
@@ -10,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from models.tables import Users
 from config.db import SessionLocal
 from sqlalchemy.orm import Session
-
+from fastapi.responses import JSONResponse
 
 router = APIRouter(
     prefix='/auth',
@@ -27,6 +26,11 @@ class Token(BaseModel):
     acess_token :str 
     token_type: str 
 
+
+class ValidationException(HTTPException):
+    def __init__(self, detail: str):
+        super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+
 class UserBase(BaseModel):
     username: str
     email :str
@@ -35,19 +39,19 @@ class UserBase(BaseModel):
     password: str
     role:str
 
-    # @field_validator('password')
-    # def validate_password(cls, v):
-    #     if len(v) < 8:
-    #         raise ValueError('Password must be at least 8 characters long.')
-    #     if not re.search(r'[A-Z]', v):
-    #         raise ValueError('Password must contain at least one uppercase letter.')
-    #     if not re.search(r'[a-z]', v):
-    #         raise ValueError('Password must contain at least one lowercase letter.')
-    #     if not re.search(r'[0-9]', v):
-    #         raise ValueError('Password must contain at least one numeric digit.')
-    #     if not re.search(r'[\W_]', v):  
-    #         raise ValueError('Password must contain at least one special character.')
-    #     return v
+    @field_validator('password')
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValidationException({"status":False, "mssg":'Password must be at least 8 characters long.'})       
+        if not re.search(r'[A-Z]', v):
+            raise ValidationException({"status":False, "mssg":'Password must contain at least one uppercase letter.'})       
+        if not re.search(r'[a-z]', v):
+            raise ValidationException({"status":False, "mssg":'Password must contain at least one lowercase letter.'})
+        if not re.search(r'[0-9]', v):
+            raise ValidationException({"status":False, "mssg":'Password must contain at least one numeric digit.'})
+        if not re.search(r'[\W_]', v):  
+            raise ValidationException({"status":False, "mssg":'Password must contain at least one special character.'})
+        return v
 
 def get_db():
     db = SessionLocal()
@@ -61,9 +65,9 @@ db_dependency = Annotated[Session, Depends(get_db)]
 def authenticate_user(username:str, password:str,db):
     user = db.query(Users).filter(Users.username == username).first()
     if not user:
-        return False 
+        raise ValidationException({"status":False, "mssg":'Username doesnot exists.'})       
     if not crypt.verify(password, user.hashed_password):
-        return False 
+        raise ValidationException({status:False, "mssg":'Password does not match.'})       
     return user
 
 def create_access_token(username:str, user_id:int, role:str, expire_delta:timedelta):
@@ -93,6 +97,15 @@ async def get_current_user(token: Annotated[str,Depends(oauth2_bearer)]):
 async def signup(db: db_dependency,
                  user:UserBase):
     
+    existing_user = db.query(Users).filter((Users.username == user.username) | (Users.email == user.email)).first()
+
+    if existing_user:
+        if existing_user.username == user.username:
+            raise ValidationException({"status":False, "mssg":'Username already exists.'})       
+
+        if existing_user.email == user.email:
+            raise ValidationException({"status":False, "mssg":'Useremail already exists.'})       
+
     create_user_model = Users(
         email = user.email,
         username = user.username,
@@ -104,14 +117,15 @@ async def signup(db: db_dependency,
     )
     db.add(create_user_model)
     db.commit()
+    return {"detail":{"status":True,"mssg":"Account Created Successfully!"}}
 
 
 @router.post('/login')
 async def login(form_data : Annotated[OAuth2PasswordRequestForm, Depends()],
                 db: db_dependency):
     user =authenticate_user(form_data.username, form_data.password,db)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="could not verify user.")
+    # if not user:
+    #     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+    #                         detail="could not verify user.")
     token = create_access_token(user.username, user.role, user.id,timedelta(days=30))
     return {"access_token":token,'token_type':'bearer'}
