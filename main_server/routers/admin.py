@@ -3,7 +3,8 @@ from fastapi.responses import JSONResponse
 from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from typing import Annotated
+from decimal import Decimal
+from typing import Annotated,Dict
 from routers.auth import get_current_user
 from models.tables import Chatbot_stats, Company,Queries,Users
 
@@ -11,6 +12,28 @@ router = APIRouter(
     prefix='/admin',
     tags=['Admin']
 )
+
+
+INPUT_TOKEN_RATE = 0.35 / 1_000_000
+OUTPUT_TOKEN_RATE = 0.40 / 1_000_000
+
+def company_to_dict(company) -> Dict:
+    input_token_cost = company.input_tokens * INPUT_TOKEN_RATE
+    output_token_cost = company.output_tokens * OUTPUT_TOKEN_RATE
+
+
+    return {
+        "id": company.id,
+        "company_key": company.company_key,
+        "input_tokens": company.input_tokens,
+        "created_date": company.created_date.isoformat(), 
+        "company_name": company.company_name,
+        "base_url": company.base_url,
+        "email": company.email,
+        "output_tokens": company.output_tokens,
+        "input_token_cost": input_token_cost,  
+        "output_token_cost": output_token_cost
+    }
 
 
 def get_db():
@@ -30,34 +53,50 @@ async def get_total_stats(db:db_dependency,user: user_dependency):
         total_input_tokens = db.query(func.sum(Company.input_tokens)).scalar() or 0
         total_output_tokens = db.query(func.sum(Company.output_tokens)).scalar() or 0
         total_queries = db.query(func.count(Queries.id)).scalar() or 0
-        print(type(total_queries),total_input_tokens,total_output_tokens)
-        dollar_spend_input = (total_input_tokens)* (0.35/1000000)
-        dollar_spend_output = (total_output_tokens) * (0.40/1000000)
-        total_dollar_spend = (dollar_spend_input + dollar_spend_output)
+        
+        total_input_tokens = Decimal(total_input_tokens)
+        total_output_tokens = Decimal(total_output_tokens)
+        
+        
+        input_rate = Decimal('0.35') / Decimal('1000000')
+        output_rate = Decimal('0.40') / Decimal('1000000')
+        
+        
+        dollar_spend_input = total_input_tokens * input_rate
+        dollar_spend_output = total_output_tokens * output_rate
+        total_dollar_spend = dollar_spend_input + dollar_spend_output
 
-        return JSONResponse(content={
-            "input_tokens":total_input_tokens,
-            "output_tokens":total_output_tokens,
+        return JSONResponse(status_code=status.HTTP_200_OK,content={
+            "status":status.HTTP_200_OK,
+            "data":{
+            "input_tokens":float(total_input_tokens),
+            "output_tokens":float(total_output_tokens),
             "requests":total_queries,
-            "dollar_spend_input":dollar_spend_input,
-            "dollar_spend_output":dollar_spend_output,
-            "dollar_spend_total":total_dollar_spend
+            "dollar_spend_input":float(dollar_spend_input),
+            "dollar_spend_output":float(dollar_spend_output),
+            "dollar_spend_total":float(total_dollar_spend)}
         })
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500,detail="Something went wrong not able to get the total stats")
     
-@router.get("/companies")
+@router.get("/companies",status_code=status.HTTP_200_OK)
 async def all_companies(db:db_dependency,user: user_dependency):
     try:
         companies = db.query(Company).all()
-        return JSONResponse(content={
-            "companies":companies
-        })
+
+        companies_list = [company_to_dict(company) for company in companies]
+        return JSONResponse(
+            content={
+                "status": status.HTTP_200_OK,
+                "data": companies_list
+            }
+        )
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500,detail="Unable to fetch all companies")
     
+
 
 
     
