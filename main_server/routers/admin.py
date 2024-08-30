@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from decimal import Decimal
 from typing import Annotated,Dict
-from routers.auth import get_current_user
+from routers.auth import get_current_user,get_current_user_with_token
 from models.tables import Chatbot_stats, Company,Queries,Users
 
 router = APIRouter(
@@ -44,7 +44,7 @@ def get_db():
         db.close()
 
 db_dependency = Annotated[Session,Depends(get_db)]
-user_dependency = Annotated[dict,Depends(get_current_user)]
+user_dependency = Annotated[dict,Depends(get_current_user_with_token)]
 
 
 @router.get("/total-stats")
@@ -66,8 +66,8 @@ async def get_total_stats(db:db_dependency,user: user_dependency):
         dollar_spend_output = total_output_tokens * output_rate
         total_dollar_spend = dollar_spend_input + dollar_spend_output
 
-        return JSONResponse(status_code=status.HTTP_200_OK,content={
-            "status":status.HTTP_200_OK,
+        return JSONResponse(content={
+            "status":"200",
             "data":{
             "input_tokens":float(total_input_tokens),
             "output_tokens":float(total_output_tokens),
@@ -78,7 +78,7 @@ async def get_total_stats(db:db_dependency,user: user_dependency):
         })
     except Exception as e:
         print(e)
-        raise HTTPException(status_code=500,detail="Something went wrong not able to get the total stats")
+        return JSONResponse(content="Something went wrong not able to get the total stats")
     
 @router.get("/companies",status_code=status.HTTP_200_OK)
 async def all_companies(db:db_dependency,user: user_dependency):

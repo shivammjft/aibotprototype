@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends,status, HTTPException
+from fastapi import APIRouter, Depends,status, HTTPException,Request
 from passlib.context import CryptContext
 from pydantic import BaseModel, field_validator
 from typing import Annotated
@@ -80,6 +80,17 @@ def get_db():
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
+
+def get_token(request: Request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        raise ValidationException({"status":False, "mssg":'Authorization Header missing.'})   
+    token_type, token = auth_header.split()
+    if token_type.lower() != "bearer":
+       raise ValidationException({"status":False, "mssg":'Token type is not bearer.'})   
+    return token
+
+
 def authenticate_user(username:str, password:str,db):
     user = db.query(Users).filter(Users.username == username).first()
     if not user:
@@ -94,6 +105,22 @@ def create_access_token(username:str, user_id:int, role:str, expire_delta:timede
     encode.update({'exp':expires})
     return jwt.encode(encode,SECRET_KEY,algorithm=ALGORITHM)
 
+
+
+async def get_current_user_with_token(token: Annotated[str,Depends(get_token)]):
+    try:
+        payload = jwt.decode(token, SECRET_KEY,algorithms=[ALGORITHM])
+        username: str = payload.get('sub')
+        user_id:int = payload.get('id')
+        user_role: str = payload.get('role')
+
+        if username is None or user_id is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail="could not verify user.")
+        return {"username": username, 'id':user_id}
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="could not verify user")
 
 async def get_current_user(token: Annotated[str,Depends(oauth2_bearer)]):
     try:
@@ -136,7 +163,7 @@ async def signup(db: db_dependency,
     db.commit()
     return JSONResponse(content={"detail":{"status":True,"mssg":"Account Created Successfully!"}})
 
-
+user_dependency = Annotated[dict,Depends(get_current_user)]
 @router.post('/login')
 async def login(form_data : loginUserData,
                 db: db_dependency):
