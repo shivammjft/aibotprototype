@@ -98,7 +98,7 @@ def callback(ch, method, properties, body):
         
         # Run asynchronous process function
         asyncio.run(process(company_document.base_url,company_key))
-        
+        CHATBOT_KEY = chatbot_document.chatbot_id
         API_KEY = company_key
         email = company_document.email
         company_name = company_document.company_name
@@ -110,6 +110,7 @@ def callback(ch, method, properties, body):
         company_name=company_name,
         base_link=base_link,
         API_KEY=API_KEY,
+        CHATBOT_KEY=CHATBOT_KEY,
         chatbot_name=chatbot_document.chatbot_name,
         template=bot_ready_email_template
     )

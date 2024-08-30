@@ -4,7 +4,7 @@ import os
 from jinja2 import Template
 
 
-def send_email_with_template(recipent_email,subject,company_id,company_name,base_link,API_KEY,chatbot_name,template):
+def send_email_with_template(recipent_email,subject,company_id,company_name,base_link,API_KEY,CHATBOT_KEY,chatbot_name,template):
     template = Template(template)
         # Render the template with the provided values
     html_content = template.render(
@@ -12,6 +12,7 @@ def send_email_with_template(recipent_email,subject,company_id,company_name,base
             company_name=company_name,
             base_link=base_link,
             API_KEY=API_KEY,
+            CHATBOT_KEY=CHATBOT_KEY,
             chatbot_name=chatbot_name
         )
     sender_email = os.getenv('SENDER')
