@@ -4,7 +4,6 @@ fastapi==0.112.0
 langchain==0.2.12
 langchain_community==0.2.11
 langchain_openai==0.1.20
-langchain_pinecone==0.1.3
 pinecone==5.0.0
 pydantic==2.8.2
 pymongo==4.5.0
@@ -14,3 +13,5 @@ uvicorn==0.30.5
 pika==1.3.2
 langchain-qdrant==0.1.3
 pymysql==1.1.1
+mailjet-rest==1.3.4
+Jinja2==3.1.4

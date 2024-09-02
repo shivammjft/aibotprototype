@@ -17,7 +17,7 @@ This document provides instructions for setting up and running the necessary ser
 2. **Processing Server**
 
    - **Port**: 9000
-   - **Command**: `uvicorn main:app --host 0.0.0.0 --port 9000 --reload`
+   - **Command**2q8^qPp61N+/Zi4%_r?Mm1+Dzw#5io2Y: `uvicorn main:app --host 0.0.0.0 --port 9000 --reload`
 
 3. **Redis Server**
    - **Port**: 6379
@@ -92,3 +92,4 @@ Ensure that no other services are using ports 8000, 9000, or 6379 on your host m
 
 If containers cannot communicate, verify that they are attached to the same Docker network using docker network inspect chatbotnetwork.
 For further assistance, please refer to Docker's official documentation or consult with the development team.
+

@@ -12,3 +12,4 @@ python_jose==3.3.0
 SQLAlchemy==2.0.30
 tiktoken==0.7.0
 uvicorn==0.30.6
+PyMySQL==1.1.1
