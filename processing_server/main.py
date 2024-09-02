@@ -3,7 +3,7 @@ from consumer import callback
 import pika
 import threading
 from dotenv import load_dotenv
-
+import os
 load_dotenv()
 app = FastAPI()
 
@@ -11,7 +11,7 @@ QUEUE_NAME = "COMPANY_INIT"
 
 def start_rabbitmq_consumer():
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv('RABBITMQ_HOST')))
         channel = connection.channel()
         channel.queue_declare(queue=QUEUE_NAME, durable=True)
         print(' [*] Waiting for messages. To exit press CTRL+C')

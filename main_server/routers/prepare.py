@@ -9,8 +9,10 @@ from sqlalchemy.orm import Session
 import pika
 import json
 from datetime import datetime
+import os
+from dotenv import load_dotenv
 
-
+load_dotenv()
 
 router = APIRouter(
     tags=['prepare']
@@ -71,7 +73,7 @@ def add_company(req: ClientRequest, db:db_dependency):
         message_body_json = json.dumps(message_body)
         QUEUE_NAME ="COMPANY_INIT"
         connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host='localhost'))
+        pika.ConnectionParameters(host=os.getenv('RABBITMQ_HOST')))
         channel = connection.channel()
         channel.queue_declare(queue=QUEUE_NAME, durable=True)
         channel.basic_publish(
