@@ -71,7 +71,7 @@ docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-ma
 
 ```bash
 Copy code
-docker run -p 6333:6333 -p 6334:6334 \
+docker run --network chatbotnetwork --name qDrant-server -p 6333:6333 -p 6334:6334 \
     -v $(pwd)/qdrant_storage:/qdrant/storage:z \
     qdrant/qdrant
 ```
@@ -80,7 +80,7 @@ docker run -p 6333:6333 -p 6334:6334 \
 
 ```bash
 Copy code
-docker run --name mysql -e MYSQL_ROOT_PASSWORD=12345678 -d mysql:tag
+docker run  --network chatbotnetwork  --name mysql -e MYSQL_ROOT_PASSWORD=12345678 -d mysql:tag
 
 mysql -u root -p
 
