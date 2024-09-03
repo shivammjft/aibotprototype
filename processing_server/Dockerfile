@@ -17,5 +17,5 @@ ENV SENDER="shivam.pandey@jellyfishtechnologies.com"
 ENV MAILJET_API_KEY=b206a37878213791ca36f654de1a5ee4
 ENV MAILJET_SECRET_KEY=0186662647f8ca1a38953139ce28ff3a
 ENV RABBITMQ_HOST="rabbitmq_server"
-
+ENV QDRANT_URL="qDrant_server:6333"
 CMD ["uvicorn", "main:app", "--host","0.0.0.0", "--port", "9000"]

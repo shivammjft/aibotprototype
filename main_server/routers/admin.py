@@ -97,6 +97,8 @@ async def all_companies(db:db_dependency,user: user_dependency):
         raise HTTPException(status_code=500,detail="Unable to fetch all companies")
     
 
+    
+
 
 
     
