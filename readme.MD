@@ -17,7 +17,7 @@ This document provides instructions for setting up and running the necessary ser
 2. **Processing Server**
 
    - **Port**: 9000
-   - **Command**2q8^qPp61N+/Zi4%_r?Mm1+Dzw#5io2Y: `uvicorn main:app --host 0.0.0.0 --port 9000 --reload`
+   - **Command**2q8^qPp61N+/Zi4%\_r?Mm1+Dzw#5io2Y: `uvicorn main:app --host 0.0.0.0 --port 9000 --reload`
 
 3. **Redis Server**
    - **Port**: 6379
@@ -60,20 +60,33 @@ Copy code
 sudo docker run --network chatbotnetwork -d -p 9000:9000 chatbotprocess
 ```
 
-### 4. Run the RabbitMQ Server
+### 5. Run the RabbitMQ Server
 
 ```bash
 Copy code
 docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
 ```
 
-### 4. Run the Qdrant Server
+### 6. Run the Qdrant Server
 
 ```bash
 Copy code
 docker run -p 6333:6333 -p 6334:6334 \
     -v $(pwd)/qdrant_storage:/qdrant/storage:z \
     qdrant/qdrant
+```
+
+### 7. Run the Mysql Server
+
+```bash
+Copy code
+docker run --name mysql -e MYSQL_ROOT_PASSWORD=12345678 -d mysql:tag
+
+mysql -u root -p
+
+CREATE DATABASE chatbotserver
+
+GRANT ALL PRIVILEGES ON chatbotserver.* TO 'root'@'%';
 ```
 
 ### Notes
@@ -92,4 +105,3 @@ Ensure that no other services are using ports 8000, 9000, or 6379 on your host m
 
 If containers cannot communicate, verify that they are attached to the same Docker network using docker network inspect chatbotnetwork.
 For further assistance, please refer to Docker's official documentation or consult with the development team.
-
