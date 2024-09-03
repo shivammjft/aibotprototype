@@ -17,7 +17,7 @@ This document provides instructions for setting up and running the necessary ser
 2. **Processing Server**
 
    - **Port**: 9000
-   - **Command**2q8^qPp61N+/Zi4%\_r?Mm1+Dzw#5io2Y: `uvicorn main:app --host 0.0.0.0 --port 9000 --reload`
+   - **Command**: `uvicorn main:app --host 0.0.0.0 --port 9000 --reload`
 
 3. **Redis Server**
    - **Port**: 6379
