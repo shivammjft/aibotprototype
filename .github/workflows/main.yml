@@ -1,0 +1,70 @@
+name: Deploy Chatbot Application
+
+on:
+  push:
+    branches:
+      - main  # the branch trigger this workflow
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/docker
+        key: ${{ runner.os }}-docker-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-docker-
+
+    - name: Build Docker images
+      run: |
+        cd main_server
+        sudo docker build -t chatbotmain .
+        cd ../processing_server
+        sudo docker build -t chatbotprocess .
+
+    - name: Stop and remove running containers
+      run: |
+        sudo docker ps -q | xargs -r sudo docker kill || true
+        sudo docker rm $(sudo docker ps -a -q) || true
+
+    - name: Remove all Docker images
+      run: |
+        sudo docker rmi -f $(sudo docker images -q) || true
+
+    - name: Pull required Docker images
+      run: |
+        sudo docker pull redis
+        sudo docker pull mysql
+        sudo docker pull qdrant/qdrant
+        sudo docker pull rabbitmq:3.13-management
+
+    - name: Create Docker network
+      run: |
+        sudo docker network create chatbotnetwork || true
+
+    - name: Run Docker containers
+      run: |
+        sudo docker run --name redis-server --network chatbotnetwork -p 6379:6379 -d redis
+        sudo docker run --name qDrant-server --network chatbotnetwork -d -p 6333:6333 -p 6334:6334 \
+          -v $(pwd)/qdrant_storage:/qdrant/storage:z \
+          qdrant/qdrant
+        sudo docker run -it --rm --network chatbotnetwork --name rabbitmq-server \
+          -d -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
+        sudo docker run --network chatbotnetwork --name mysql -e MYSQL_ROOT_PASSWORD=12345678 -d mysql:latest
+
+    - name: Verify running containers
+      run: |
+        sudo docker ps
