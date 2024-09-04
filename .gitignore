@@ -5,3 +5,4 @@ __pycache__
 chatbot
 .pyc
 Dockerfile
+node_modules
