@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 from config.db import Base,engine
 from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
-
 Base.metadata.create_all(bind = engine)
+
+
 
 
 load_dotenv()
@@ -38,8 +39,6 @@ os.environ["LANGCHAIN_PROJECT"] = "Chatbot Doc Mapping"
 # )
 
 # llm_4o = ChatOpenAI(model="gpt-4o-mini")
-
-
 
 
 @app.get("/")

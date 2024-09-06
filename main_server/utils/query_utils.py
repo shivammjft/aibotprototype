@@ -44,7 +44,7 @@ text_splitter = RecursiveCharacterTextSplitter(
 
 def context_retriever(query,session_id,company_id,chatbot_id,db,collection_name, embeddings=OpenAIEmbeddings()):
     try:
-        vectorstore = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=collection_name, url=os.getenv('QDRANT_URL'))
+        vectorstore = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=collection_name, url="qDrant_server:6333")
         docs = vectorstore.similarity_search(query, k=5)
         if len(docs) != 0:
 

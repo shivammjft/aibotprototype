@@ -4,5 +4,7 @@ main
 __pycache__
 chatbot
 .pyc
-Dockerfile
 node_modules
+main_server/Dockerfile
+processing_server/Dockerfile
+Dockerfile
