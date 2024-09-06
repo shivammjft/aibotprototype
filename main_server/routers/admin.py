@@ -7,6 +7,12 @@ from decimal import Decimal
 from typing import Annotated,Dict
 from routers.auth import get_current_user,get_current_user_with_token
 from models.tables import Chatbot_stats, Company,Queries,Users
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import JSONResponse
+from pydantic import HttpUrl
+import os
+
+
 
 router = APIRouter(
     prefix='/admin',
@@ -97,7 +103,25 @@ async def all_companies(db:db_dependency,user: user_dependency):
         raise HTTPException(status_code=500,detail="Unable to fetch all companies")
     
 
+
+
+@router.post("/upload/")
+async def upload_files(company_name:str,base_url:HttpUrl ,files: list[UploadFile] = File(...)):
     
+    folder_name = f"{company_name}-{base_url}"
+    dir_path = os.path.join("uploads", folder_name)
+    
+    os.makedirs(dir_path, exist_ok=True)
+
+    file_paths = []
+    for file in files:
+        file_path = os.path.join(dir_path, file.filename)
+        with open(file_path, "wb") as buffer:
+            buffer.write(await file.read())
+        file_paths.append(file_path)
+
+    return JSONResponse(content={"file_paths": file_paths}, status_code=200)
+
 
 
 
