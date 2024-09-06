@@ -72,8 +72,9 @@ def add_company(req: ClientRequest, db:db_dependency):
         }
         message_body_json = json.dumps(message_body)
         QUEUE_NAME ="COMPANY_INIT"
+        print("sgasd")
         connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host=os.getenv('RABBITMQ_HOST')))
+        pika.ConnectionParameters(host='rabbitmq_server'))
         channel = connection.channel()
         channel.queue_declare(queue=QUEUE_NAME, durable=True)
         channel.basic_publish(

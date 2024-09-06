@@ -39,54 +39,57 @@ Run the Redis server in a Docker container and connect it to the chatbotnetwork:
 
 ```bash
 Copy code
-sudo docker run --name redis-server --network chatbotnetwork -p 6379:6379 -d redis
+sudo docker run --name redis_server --network chatbotnetwork -p 6379:6379 -d redis
 ```
 
-### 3. Run the Main Server
-
-Start the main server container, connecting it to the chatbotnetwork:
+### 3. Run the RabbitMQ Server
 
 ```bash
 Copy code
-sudo docker run --network chatbotnetwork -d -p 8000:8000 chatbotmain
+sudo docker run -it --rm --name rabbitmq_server \
+-d -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
 ```
 
-### 4. Run the Processing Server
-
-Start the processing server container, also connecting it to the chatbotnetwork:
+### 4. Run the Qdrant Server
 
 ```bash
 Copy code
-sudo docker run --network chatbotnetwork -d -p 9000:9000 chatbotprocess
+sudo docker run --network chatbotnetwork --name qDrant_server -d -p 6333:6333 -p 6334:6334  -v $(pwd)/qdrant_storage:/qdrant/storage:z qdrant/qdrant
 ```
 
-### 5. Run the RabbitMQ Server
+### 5. Run the Mysql Server
 
 ```bash
 Copy code
-docker run -it --rm --name rabbitmq-server -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
-```
+sudo docker run  --network chatbotnetwork  --name mysql -e MYSQL_ROOT_PASSWORD=12345678  -d mysql:latest
 
-### 6. Run the Qdrant Server
-
-```bash
-Copy code
-docker run --network chatbotnetwork --name qDrant-server -p 6333:6333 -p 6334:6334 \
-    -v $(pwd)/qdrant_storage:/qdrant/storage:z \
-    qdrant/qdrant
-```
-
-### 7. Run the Mysql Server
-
-```bash
-Copy code
-docker run  --network chatbotnetwork  --name mysql -e MYSQL_ROOT_PASSWORD=12345678 -d mysql:tag
+sudo docker exec -it mysql bash
 
 mysql -u root -p
 
 CREATE DATABASE chatbotserver
 
 GRANT ALL PRIVILEGES ON chatbotserver.* TO 'root'@'%';
+```
+
+### 6. Create the image of main and Run the Main Server
+
+Start the main server container, connecting it to the chatbotnetwork:
+
+```bash
+Copy code
+sudo docker build -t chatbotmain .
+sudo docker run --network chatbotnetwork -d -p 8000:8000 chatbotmain
+```
+
+### 7. Create the image of Process and Run the Processing Server
+
+Start the processing server container, also connecting it to the chatbotnetwork:
+
+```bash
+Copy code
+sudo docker build -t chatbotprocess .
+sudo docker run --network chatbotnetwork -d -p 9000:9000 chatbotprocess
 ```
 
 ### Notes
