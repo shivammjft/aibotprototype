@@ -101,8 +101,82 @@ async def all_companies(db:db_dependency,user: user_dependency):
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500,detail="Unable to fetch all companies")
-    
 
+
+
+@router.get("/companies/{company_id}/chatbots", status_code=status.HTTP_200_OK)
+async def get_chatbots(company_id: int, db: db_dependency, user: user_dependency):
+    try:
+        company = db.query(Company).filter(Company.id == company_id).first()
+        if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+
+        chatbots = db.query(Chatbot_stats).filter(Chatbot_stats.company_id == company_id).all()
+        
+        chatbots_list = []
+        for chatbot in chatbots:
+            input_token_cost = Decimal(chatbot.total_input_tokens) * Decimal(INPUT_TOKEN_RATE)
+            output_token_cost = Decimal(chatbot.total_output_tokens) * Decimal(OUTPUT_TOKEN_RATE)
+
+            chatbot_info = {
+                "chatbot_id": chatbot.chatbot_id,
+                "chatbot_name": chatbot.chatbot_name,
+                "origin_url": chatbot.origin_url,
+                "total_input_tokens": chatbot.total_input_tokens,
+                "total_output_tokens": chatbot.total_output_tokens,
+                "total_queries": chatbot.total_queries,
+                "last_query_time": chatbot.last_query_time.isoformat() if chatbot.last_query_time else None,
+                "input_token_cost": float(input_token_cost),
+                "output_token_cost": float(output_token_cost),
+                "total_token_cost": float(input_token_cost + output_token_cost)
+            }
+
+            chatbots_list.append(chatbot_info)
+        
+        return JSONResponse(
+            content={
+                "status": status.HTTP_200_OK,
+                "data": chatbots_list
+            }
+        )
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Unable to fetch chatbots")
+
+
+@router.get("/chatbots/{chatbot_id}/queries", status_code=status.HTTP_200_OK)
+async def get_queries_by_chatbot(chatbot_id: str, db: db_dependency, user: user_dependency):
+    try:
+        queries = db.query(Queries).filter(Queries.chatbot_id == chatbot_id).all()
+        
+        if not queries:
+            raise HTTPException(status_code=404, detail="No queries found for this chatbot")
+
+        queries_list = []
+        for query in queries:
+            queries_info = {
+                "id": query.id,
+                "session_id": query.session_id,
+                "query_text_bot": query.query_text_bot,
+                "query_text_user": query.query_text_user,
+                "query_context": query.query_context,
+                "input_tokens": query.input_tokens,
+                "output_tokens": query.output_tokens,
+                "query_time": query.query_time.isoformat() if query.query_time else None,
+                "origin_url": query.origin_url
+            }
+
+            queries_list.append(queries_info)
+
+        return JSONResponse(
+            content={
+                "status": status.HTTP_200_OK,
+                "data": queries_list
+            }
+        )
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=500, detail="Unable to fetch queries")
 
 
 @router.post("/upload/")
