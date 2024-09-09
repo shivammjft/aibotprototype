@@ -7,31 +7,7 @@ This document provides instructions for setting up and running the necessary ser
 - Docker installed on your machine.
 - Docker Compose (optional, for easier management).
 
-## Services and Ports
-
-1. **Main Server**
-
-   - **Port**: 8000
-   - **Command**: `uvicorn main:app --host 0.0.0.0 --port 8000 --reload`
-
-2. **Processing Server**
-
-   - **Port**: 9000
-   - **Command**: `uvicorn main:app --host 0.0.0.0 --port 9000 --reload`
-
-3. **Redis Server**
-   - **Port**: 6379
-   - **Docker Command**: `docker run -d -p 6379:6379 --name redis-container redis`
-
-## Setup Instructions
-
-### 1. Create a Docker Network
-
-First, create a custom Docker network to ensure that all containers can communicate with each other:
-
-```bash
-sudo docker network create chatbotnetwork
-```
+### 1. Install Mysql and set the root user at password 12345678
 
 ### 2. Run the Redis Server
 
@@ -39,70 +15,54 @@ Run the Redis server in a Docker container and connect it to the chatbotnetwork:
 
 ```bash
 Copy code
-sudo docker run --name redis_server --network chatbotnetwork -p 6379:6379 -d redis
+sudo docker run -d -p 6379:6379 redis:latest
 ```
 
 ### 3. Run the RabbitMQ Server
 
 ```bash
 Copy code
-sudo docker run -it --rm --name rabbitmq_server \
--d -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
+docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
 ```
 
 ### 4. Run the Qdrant Server
 
 ```bash
 Copy code
-sudo docker run --network chatbotnetwork --name qDrant_server -d -p 6333:6333 -p 6334:6334  -v $(pwd)/qdrant_storage:/qdrant/storage:z qdrant/qdrant
+docker run -p 6333:6333 -p 6334:6334 \
+-v $(pwd)/qdrant_storage:/qdrant/storage:z \
+    qdrant/qdrant
 ```
 
-### 5. Run the Mysql Server
+### 6. Run the Main Server with the env
 
 ```bash
-Copy code
-sudo docker run  --network chatbotnetwork  --name mysql -e MYSQL_ROOT_PASSWORD=12345678  -d mysql:latest
+cd main_server
+uvicorn main:app --port 8000 --reload
 
-sudo docker exec -it mysql bash
-
-mysql -u root -p
-
-CREATE DATABASE chatbotserver
-
-GRANT ALL PRIVILEGES ON chatbotserver.* TO 'root'@'%';
 ```
 
-### 6. Create the image of main and Run the Main Server
-
-Start the main server container, connecting it to the chatbotnetwork:
+### 7. Run the Processing Server with the env
 
 ```bash
-Copy code
-sudo docker build -t chatbotmain .
-sudo docker run --network chatbotnetwork -d -p 8000:8000 chatbotmain
+cd processing_server
+uvicorn main:app --port 9000 --reload
+
 ```
-
-### 7. Create the image of Process and Run the Processing Server
-
-Start the processing server container, also connecting it to the chatbotnetwork:
-
-```bash
-Copy code
-sudo docker build -t chatbotprocess .
-sudo docker run --network chatbotnetwork -d -p 9000:9000 chatbotprocess
-```
-
-### Notes
-
-Ensure that Docker Daemon is running before executing the commands.
-Replace chatbotmain and chatbotprocess with the actual Docker image names if they differ.
-To use Docker Compose for managing these services, a docker-compose.yml file can be created for easier configuration and management.
 
 ### Troubleshooting
 
 #### Ports Conflicts:
 
 Ensure that no other services are using ports 8000, 9000, or 6379 on your host machine.
+
+if issue presist stop the local redis with
+
+```bash
+cd processing_server
+sudo snap stop redis
+
+```
 
 #### Network Issues:
 

@@ -1,10 +1,65 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+.ENV/
+
+# Environment variables
 .env
-proces
-main
-__pycache__
-chatbot
-.pyc
-node_modules
+*.env
+
+# Dependency directories
+node_modules/
+
+# Logs
+*.log
+*.csv
+*.dat
+*.out
+*.gz
+
+# Docker
+*.docker
+docker-compose.override.yml
+
+# Ignore other directories
+proces/
+main/
+chatbot/
 main_server/Dockerfile
 processing_server/Dockerfile
 Dockerfile
+
+# System files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*~
+.idea/
+.vscode/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Other
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Compiled binaries
+*.out
+*.o
+*.a
+*.so
+*.dylib
