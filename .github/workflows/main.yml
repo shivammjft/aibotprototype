@@ -1,70 +1,84 @@
-name: Deploy Chatbot Application
+name: CI/CD Pipeline for DigitalOcean Droplet
 
 on:
   push:
     branches:
-      - main  # the branch trigger this workflow
+      - cicd
 
 jobs:
-  deploy:
+  redeploy:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      # Step 2: Set up SSH for DigitalOcean access
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }} # Add your SSH private key in GitHub Secrets
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      # Step 3: Determine which servers had changes
+      - name: Check changes in files
+        id: check_files
+        run: |
+          CHATBOT_MAIN_CHANGED=false
+          CHATBOT_PROCESS_CHANGED=false
 
-    - name: Cache Docker layers
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/docker
-        key: ${{ runner.os }}-docker-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-docker-
+          if git diff --name-only HEAD^ HEAD | grep -q 'chatbotmain/'; then
+            CHATBOT_MAIN_CHANGED=true
+          fi
 
-    - name: Build Docker images
-      run: |
-        cd main_server
-        sudo docker build -t chatbotmain .
-        cd ../processing_server
-        sudo docker build -t chatbotprocess .
+          if git diff --name-only HEAD^ HEAD | grep -q 'chatbotprocess/'; then
+            CHATBOT_PROCESS_CHANGED=true
+          fi
 
-    - name: Stop and remove running containers
-      run: |
-        sudo docker ps -q | xargs -r sudo docker kill || true
-        sudo docker rm $(sudo docker ps -a -q) || true
+          echo "::set-output name=main_changed::${CHATBOT_MAIN_CHANGED}"
+          echo "::set-output name=process_changed::${CHATBOT_PROCESS_CHANGED}"
 
-    - name: Remove all Docker images
-      run: |
-        sudo docker rmi -f $(sudo docker images -q) || true
+      # Step 4: Deploy to the affected servers (both chatbotmain and chatbotprocess if needed)
+      - name: Deploy to DigitalOcean
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@{secrets.SSH_HOST} << EOF
+            # Check if chatbotmain needs to be redeployed
+            if [ "${{ steps.check_files.outputs.main_changed }}" = "true" ]; then
+              CONTAINER_ID=\$(sudo docker ps -q --filter "name=chatbotmain")
+              if [ "\$CONTAINER_ID" ]; then
+                echo "Stopping and removing container chatbotmain..."
+                sudo docker stop \$CONTAINER_ID
+                sudo docker rm \$CONTAINER_ID
 
-    - name: Pull required Docker images
-      run: |
-        sudo docker pull redis
-        sudo docker pull mysql
-        sudo docker pull qdrant/qdrant
-        sudo docker pull rabbitmq:3.13-management
+                IMAGE_ID=\$(sudo docker images -q chatbotmain)
+                if [ "\$IMAGE_ID" ]; then
+                  echo "Removing image chatbotmain..."
+                  sudo docker rmi -f \$IMAGE_ID
+                fi
+              fi
 
-    - name: Create Docker network
-      run: |
-        sudo docker network create chatbotnetwork || true
+              echo "Rebuilding and running container chatbotmain..."
+              sudo docker build -t chatbotmain .
+              sudo docker run -d -p 8000:8000 chatbotmain
+            fi
 
-    - name: Run Docker containers
-      run: |
-        sudo docker run --name redis-server --network chatbotnetwork -p 6379:6379 -d redis
-        sudo docker run --name qDrant-server --network chatbotnetwork -d -p 6333:6333 -p 6334:6334 \
-          -v $(pwd)/qdrant_storage:/qdrant/storage:z \
-          qdrant/qdrant
-        sudo docker run -it --rm --network chatbotnetwork --name rabbitmq-server \
-          -d -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
-        sudo docker run --network chatbotnetwork --name mysql -e MYSQL_ROOT_PASSWORD=12345678 -d mysql:latest
+            # Check if chatbotprocess needs to be redeployed
+            if [ "${{ steps.check_files.outputs.process_changed }}" = "true" ]; then
+              CONTAINER_ID=\$(sudo docker ps -q --filter "name=chatbotprocess")
+              if [ "\$CONTAINER_ID" ]; then
+                echo "Stopping and removing container chatbotprocess..."
+                sudo docker stop \$CONTAINER_ID
+                sudo docker rm \$CONTAINER_ID
 
-    - name: Verify running containers
-      run: |
-        sudo docker ps
+                IMAGE_ID=\$(sudo docker images -q chatbotprocess)
+                if [ "\$IMAGE_ID" ]; then
+                  echo "Removing image chatbotprocess..."
+                  sudo docker rmi -f \$IMAGE_ID
+                fi
+              fi
+
+              echo "Rebuilding and running container chatbotprocess..."
+              sudo docker build -t chatbotprocess .
+              sudo docker run -d -p 9000:9000 chatbotprocess
+            fi
+          EOF
