@@ -41,7 +41,7 @@ jobs:
       # Step 4: Deploy to the affected servers (both chatbotmain and chatbotprocess if needed)
       - name: Deploy to DigitalOcean
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu${{ secrets.SSH_HOST }} << EOF
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} << EOF
             # Check if chatbotmain needs to be redeployed
             if [ "${{ steps.check_files.outputs.main_changed }}" = "true" ]; then
               CONTAINER_ID=\$(sudo docker ps -q --filter "name=chatbotmain")
