@@ -5,10 +5,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from decimal import Decimal
 from typing import Annotated,Dict
-from routers.auth import get_current_user,get_current_user_with_token
-from models.tables import Chatbot_stats, Company,Queries,Users
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import JSONResponse
+from routers.auth import get_current_user_with_token
+from models.tables import Chatbot_stats, Company,Queries
+from fastapi import File, UploadFile
 from pydantic import HttpUrl
 import os
 
