@@ -8,7 +8,7 @@ on:
 jobs:
   redeploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       # Step 1: Checkout the code
       - name: Checkout code
@@ -24,26 +24,36 @@ jobs:
       - name: Check changes in files
         id: check_files
         run: |
+          # Initialize change flags
           CHATBOT_MAIN_CHANGED=false
           CHATBOT_PROCESS_CHANGED=false
 
-          if git diff --name-only HEAD^ HEAD | grep -q 'chatbotmain/'; then
+          # Get list of changed files from GitHub API
+          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               "https://api.github.com/repos/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.sha }}" \
+               | jq -r '.files[].filename' > changed_files.txt
+
+          # Check if any changed files are in the chatbotmain directory
+          if grep -q '^chatbotmain/' changed_files.txt; then
             CHATBOT_MAIN_CHANGED=true
           fi
 
-          if git diff --name-only HEAD^ HEAD | grep -q 'chatbotprocess/'; then
+          # Check if any changed files are in the chatbotprocess directory
+          if grep -q '^chatbotprocess/' changed_files.txt; then
             CHATBOT_PROCESS_CHANGED=true
           fi
 
-          echo "::set-output name=main_changed::${CHATBOT_MAIN_CHANGED}"
-          echo "::set-output name=process_changed::${CHATBOT_PROCESS_CHANGED}"
+          # Set the output values using environment variables
+          echo "main_changed=${CHATBOT_MAIN_CHANGED}" >> $GITHUB_ENV
+          echo "process_changed=${CHATBOT_PROCESS_CHANGED}" >> $GITHUB_ENV
 
       # Step 4: Deploy to the affected servers (both chatbotmain and chatbotprocess if needed)
       - name: Deploy to DigitalOcean
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} << EOF
             # Check if chatbotmain needs to be redeployed
-            if [ "${{ steps.check_files.outputs.main_changed }}" = "true" ]; then
+            if [ "$main_changed" = "true" ]; then
               CONTAINER_ID=\$(sudo docker ps -q --filter "name=chatbotmain")
               if [ "\$CONTAINER_ID" ]; then
                 echo "Stopping and removing container chatbotmain..."
@@ -58,12 +68,13 @@ jobs:
               fi
 
               echo "Rebuilding and running container chatbotmain..."
+              cd /path/to/chatbotmain # Navigate to the correct directory if necessary
               sudo docker build -t chatbotmain .
               sudo docker run -d -p 8000:8000 chatbotmain
             fi
 
             # Check if chatbotprocess needs to be redeployed
-            if [ "${{ steps.check_files.outputs.process_changed }}" = "true" ]; then
+            if [ "$process_changed" = "true" ]; then
               CONTAINER_ID=\$(sudo docker ps -q --filter "name=chatbotprocess")
               if [ "\$CONTAINER_ID" ]; then
                 echo "Stopping and removing container chatbotprocess..."
@@ -78,7 +89,11 @@ jobs:
               fi
 
               echo "Rebuilding and running container chatbotprocess..."
+              cd /path/to/chatbotprocess # Navigate to the correct directory if necessary
               sudo docker build -t chatbotprocess .
               sudo docker run -d -p 9000:9000 chatbotprocess
             fi
           EOF
+        env:
+          main_changed: ${{ steps.check_files.outputs.main_changed }}
+          process_changed: ${{ steps.check_files.outputs.process_changed }}
