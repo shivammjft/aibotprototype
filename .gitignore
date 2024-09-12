@@ -34,9 +34,6 @@ docker-compose.override.yml
 proces/
 main/
 chatbot/
-main_server/Dockerfile
-processing_server/Dockerfile
-Dockerfile
 
 # System files
 .DS_Store
