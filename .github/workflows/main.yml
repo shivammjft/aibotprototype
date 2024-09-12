@@ -1,90 +1,42 @@
-jobs:
-  redeploy:
-    runs-on: ubuntu-latest
+# Step 4: Deploy to DigitalOcean
+- name: Deploy to DigitalOcean
+  run: |
+    ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} << EOF
+      # Rebuild and run container chatbotmain
+      CONTAINER_ID=\$(sudo docker ps -q --filter "name=chatbotmain")
+      if [ "\$CONTAINER_ID" ]; then
+        echo "Stopping and removing container chatbotmain..."
+        sudo docker stop \$CONTAINER_ID
+        sudo docker rm \$CONTAINER_ID
 
-    steps:
-      # Checkout code
-      - name: Checkout code
-        uses: actions/checkout@v3
+        IMAGE_ID=\$(sudo docker images -q chatbotmain)
+        if [ "\$IMAGE_ID" ]; then
+          echo "Removing image chatbotmain..."
+          sudo docker rmi -f \$IMAGE_ID
+        fi
+      fi
 
-      # Set up SSH for DigitalOcean access
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.SSH_KEY }}
+      echo "Rebuilding and running container chatbotmain..."
+      cd aibotprototype/main_server/
+      sudo docker build -t chatbotmain .
+      sudo docker run -d -p 8000:8000 chatbotmain
 
-      # Determine which servers had changes
-      - name: Check changes in files
-        id: check_files
-        run: |
-          # Initialize change flags
-          CHATBOT_MAIN_CHANGED=false
-          CHATBOT_PROCESS_CHANGED=false
+      # Rebuild and run container chatbotprocess
+      CONTAINER_ID=\$(sudo docker ps -q --filter "name=chatbotprocess")
+      if [ "\$CONTAINER_ID" ]; then
+        echo "Stopping and removing container chatbotprocess..."
+        sudo docker stop \$CONTAINER_ID
+        sudo docker rm \$CONTAINER_ID
 
-          # Get list of changed files
-          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+        IMAGE_ID=\$(sudo docker images -q chatbotprocess)
+        if [ "\$IMAGE_ID" ]; then
+          echo "Removing image chatbotprocess..."
+          sudo docker rmi -f \$IMAGE_ID
+        fi
+      fi
 
-          # Check if any changed files are in the chatbotmain directory
-          if echo "$CHANGED_FILES" | grep -q '^chatbotmain/'; then
-            CHATBOT_MAIN_CHANGED=true
-          fi
-
-          # Check if any changed files are in the chatbotprocess directory
-          if echo "$CHANGED_FILES" | grep -q '^chatbotprocess/'; then
-            CHATBOT_PROCESS_CHANGED=true
-          fi
-
-          # Set the output values using environment variables
-          echo "main_changed=${CHATBOT_MAIN_CHANGED}" >> $GITHUB_ENV
-          echo "process_changed=${CHATBOT_PROCESS_CHANGED}" >> $GITHUB_ENV
-
-      # Deploy to DigitalOcean if there are changes
-      - name: Deploy to DigitalOcean
-        if: env.main_changed == 'true' || env.process_changed == 'true'
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} << EOF
-            # Check if chatbotmain needs to be redeployed
-            if [ "$main_changed" = "true" ]; then
-              CONTAINER_ID=\$(sudo docker ps -q --filter "name=chatbotmain")
-              if [ "\$CONTAINER_ID" ]; then
-                echo "Stopping and removing container chatbotmain..."
-                sudo docker stop \$CONTAINER_ID
-                sudo docker rm \$CONTAINER_ID
-
-                IMAGE_ID=\$(sudo docker images -q chatbotmain)
-                if [ "\$IMAGE_ID" ]; then
-                  echo "Removing image chatbotmain..."
-                  sudo docker rmi -f \$IMAGE_ID
-                fi
-              fi
-
-              echo "Rebuilding and running container chatbotmain..."
-              cd /path/to/chatbotmain
-              sudo docker build -t chatbotmain .
-              sudo docker run -d -p 8000:8000 chatbotmain
-            fi
-
-            # Check if chatbotprocess needs to be redeployed
-            if [ "$process_changed" = "true" ]; then
-              CONTAINER_ID=\$(sudo docker ps -q --filter "name=chatbotprocess")
-              if [ "\$CONTAINER_ID" ]; then
-                echo "Stopping and removing container chatbotprocess..."
-                sudo docker stop \$CONTAINER_ID
-                sudo docker rm \$CONTAINER_ID
-
-                IMAGE_ID=\$(sudo docker images -q chatbotprocess)
-                if [ "\$IMAGE_ID" ]; then
-                  echo "Removing image chatbotprocess..."
-                  sudo docker rmi -f \$IMAGE_ID
-                fi
-              fi
-
-              echo "Rebuilding and running container chatbotprocess..."
-              cd /path/to/chatbotprocess
-              sudo docker build -t chatbotprocess .
-              sudo docker run -d -p 9000:9000 chatbotprocess
-            fi
-          EOF
-        env:
-          main_changed: ${{ env.main_changed }}
-          process_changed: ${{ env.process_changed }}
+      echo "Rebuilding and running container chatbotprocess..."
+      cd aibotprototype/processing_server
+      sudo docker build -t chatbotprocess .
+      sudo docker run -d -p 9000:9000 chatbotprocess
+    EOF
