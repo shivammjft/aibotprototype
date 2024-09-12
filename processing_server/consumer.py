@@ -14,7 +14,6 @@ from utils.process_links import parallel_load
 from qdrant_client import QdrantClient
 from uuid import uuid4
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 from typing import Annotated
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client.models import Distance, VectorParams
