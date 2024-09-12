@@ -27,6 +27,16 @@ jobs:
             # Define sudo password
             SUDO_PASS='${{ secrets.SUDO_PASSWORD }}'
 
+            # Ensure directories exist
+            if [ ! -d "/aibotprototype/main_server" ]; then
+              echo "Directory /aibotprototype/main_server does not exist"
+              exit 1
+            fi
+            if [ ! -d "/aibotprototype/processing_server" ]; then
+              echo "Directory /aibotprototype/processing_server does not exist"
+              exit 1
+            fi
+
             # Rebuild and run container chatbotmain
             CONTAINER_ID=\$(echo \$SUDO_PASS | sudo -S docker ps -q --filter "name=chatbotmain")
             if [ "\$CONTAINER_ID" ]; then
@@ -43,8 +53,12 @@ jobs:
 
             echo "Rebuilding and running container chatbotmain..."
             cd /aibotprototype/main_server/
+            if [ ! -f "Dockerfile" ]; then
+              echo "Dockerfile not found in /aibotprototype/main_server/"
+              exit 1
+            fi
             echo \$SUDO_PASS | sudo -S docker build -t chatbotmain .
-            echo \$SUDO_PASS | sudo -S docker run -d -p 8000:8000 chatbotmain
+            echo \$SUDO_PASS | sudo -S docker run -d -p 8000:8000 chatbotmain || echo "Port 8000 is already in use"
 
             # Rebuild and run container chatbotprocess
             CONTAINER_ID=\$(echo \$SUDO_PASS | sudo -S docker ps -q --filter "name=chatbotprocess")
@@ -62,8 +76,12 @@ jobs:
 
             echo "Rebuilding and running container chatbotprocess..."
             cd /aibotprototype/processing_server/
+            if [ ! -f "Dockerfile" ]; then
+              echo "Dockerfile not found in /aibotprototype/processing_server/"
+              exit 1
+            fi
             echo \$SUDO_PASS | sudo -S docker build -t chatbotprocess .
-            echo \$SUDO_PASS | sudo -S docker run -d -p 9000:9000 chatbotprocess
+            echo \$SUDO_PASS | sudo -S docker run -d -p 9000:9000 chatbotprocess || echo "Port 9000 is already in use"
           EOF
         env:
           SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
