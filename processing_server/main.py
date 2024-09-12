@@ -31,6 +31,10 @@ async def startup_event():
 def read_root():
     return {"message": "FastAPI server is running"}
 
+@app.get("/health")
+def read_root():
+    return {"message": "Server is up and running"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=9000)
