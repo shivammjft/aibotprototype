@@ -58,7 +58,14 @@ jobs:
               exit 1
             fi
             echo \$SUDO_PASS | sudo -S docker build -t chatbotmain .
-            echo \$SUDO_PASS | sudo -S docker run -d -p 8000:8000 chatbotmain || echo "Port 8000 is already in use"
+            echo \$SUDO_PASS | sudo -S docker run --network chatbotnetwork -d \
+              -e MYSQL_URI='mysql+pymysql://root:12345678@mysql:3306/chatbotserver' \
+              -e OPENAI_API_KEY='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' \
+              -e LANGCHAIN_API_KEY='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' \
+              -e REDIS_URL='redis://redis-server:6379/0' \
+              -e RABBITMQ_HOST='ecstatic_wright' \
+              -e QDRANT_URL='priceless_haibt:6333' \
+              -p 8000:8000 chatbotmain || echo "Port 8000 is already in use"
 
             # Rebuild and run container chatbotprocess
             CONTAINER_ID=\$(echo \$SUDO_PASS | sudo -S docker ps -q --filter "name=chatbotprocess")
@@ -81,7 +88,17 @@ jobs:
               exit 1
             fi
             echo \$SUDO_PASS | sudo -S docker build -t chatbotprocess .
-            echo \$SUDO_PASS | sudo -S docker run -d -p 9000:9000 chatbotprocess || echo "Port 9000 is already in use"
+            echo \$SUDO_PASS | sudo -S docker run --network chatbotnetwork -d \
+              -e MYSQL_URI='mysql+pymysql://root:12345678@mysql:3306/chatbotserver' \
+              -e OPENAI_API_KEY='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' \
+              -e LANGCHAIN_API_KEY='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' \
+              -e REDIS_URL='redis://redis-server:6379/0' \
+              -e RABBITMQ_HOST='ecstatic_wright' \
+              -e QDRANT_URL='priceless_haibt:6333' \
+              -e MAILJET_API_KEY='b206a37878213791ca36f654de1a5ee4' \
+              -e MAILJET_SECRET_KEY='0186662647f8ca1a38953139ce28ff3a' \
+              -e mailto:sender='shivam.pandey@jellyfishtechnologies.com' \
+              -p 9000:9000 chatbotprocess
           EOF
         env:
           SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
