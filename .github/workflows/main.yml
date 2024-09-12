@@ -1,26 +1,19 @@
-name: CI/CD Pipeline for DigitalOcean Droplet
-
-on:
-  push:
-    branches:
-      - cicd
-
 jobs:
   redeploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code
+      # Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up SSH for DigitalOcean access
+      # Set up SSH for DigitalOcean access
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.5.4
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      # Step 3: Determine which servers had changes
+      # Determine which servers had changes
       - name: Check changes in files
         id: check_files
         run: |
@@ -28,19 +21,16 @@ jobs:
           CHATBOT_MAIN_CHANGED=false
           CHATBOT_PROCESS_CHANGED=false
 
-          # Get list of changed files from GitHub API
-          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-               -H "Accept: application/vnd.github.v3+json" \
-               "https://api.github.com/repos/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.sha }}" \
-               | jq -r '.files[].filename' > changed_files.txt
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
 
           # Check if any changed files are in the chatbotmain directory
-          if grep -q '^chatbotmain/' changed_files.txt; then
+          if echo "$CHANGED_FILES" | grep -q '^chatbotmain/'; then
             CHATBOT_MAIN_CHANGED=true
           fi
 
           # Check if any changed files are in the chatbotprocess directory
-          if grep -q '^chatbotprocess/' changed_files.txt; then
+          if echo "$CHANGED_FILES" | grep -q '^chatbotprocess/'; then
             CHATBOT_PROCESS_CHANGED=true
           fi
 
@@ -48,8 +38,9 @@ jobs:
           echo "main_changed=${CHATBOT_MAIN_CHANGED}" >> $GITHUB_ENV
           echo "process_changed=${CHATBOT_PROCESS_CHANGED}" >> $GITHUB_ENV
 
-      # Step 4: Deploy to the affected servers (both chatbotmain and chatbotprocess if needed)
+      # Deploy to DigitalOcean if there are changes
       - name: Deploy to DigitalOcean
+        if: env.main_changed == 'true' || env.process_changed == 'true'
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SSH_HOST }} << EOF
             # Check if chatbotmain needs to be redeployed
@@ -68,7 +59,7 @@ jobs:
               fi
 
               echo "Rebuilding and running container chatbotmain..."
-              cd aibotprototype/main_server/
+              cd /path/to/chatbotmain
               sudo docker build -t chatbotmain .
               sudo docker run -d -p 8000:8000 chatbotmain
             fi
@@ -89,11 +80,11 @@ jobs:
               fi
 
               echo "Rebuilding and running container chatbotprocess..."
-              cd aibotprototype/processing_server
+              cd /path/to/chatbotprocess
               sudo docker build -t chatbotprocess .
               sudo docker run -d -p 9000:9000 chatbotprocess
             fi
           EOF
         env:
-          main_changed: ${{ steps.check_files.outputs.main_changed }}
-          process_changed: ${{ steps.check_files.outputs.process_changed }}
+          main_changed: ${{ env.main_changed }}
+          process_changed: ${{ env.process_changed }}
