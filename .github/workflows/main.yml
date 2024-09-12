@@ -42,7 +42,7 @@ jobs:
             fi
 
             echo "Rebuilding and running container chatbotmain..."
-            cd /path/to/aibotprototype/main_server/
+            cd /aibotprototype/main_server/
             echo \$SUDO_PASS | sudo -S docker build -t chatbotmain .
             echo \$SUDO_PASS | sudo -S docker run -d -p 8000:8000 chatbotmain
 
@@ -61,7 +61,7 @@ jobs:
             fi
 
             echo "Rebuilding and running container chatbotprocess..."
-            cd /path/to/aibotprototype/processing_server/
+            cd /aibotprototype/processing_server/
             echo \$SUDO_PASS | sudo -S docker build -t chatbotprocess .
             echo \$SUDO_PASS | sudo -S docker run -d -p 9000:9000 chatbotprocess
           EOF
