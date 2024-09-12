@@ -18,6 +18,7 @@ from typing import Annotated
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client.models import Distance, VectorParams
 from config.db import SessionLocal
+from datetime import datetime
 
 load_dotenv()
 
