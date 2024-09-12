@@ -28,26 +28,19 @@ jobs:
           CHATBOT_MAIN_CHANGED=false
           CHATBOT_PROCESS_CHANGED=false
 
-          # Get the previous commit and current commit hashes
-          COMMIT_BEFORE=${{ github.event.before }}
-          COMMIT_CURRENT=${{ github.sha }}
-
-          # Check if previous commit hash is valid
-          if [ -z "$COMMIT_BEFORE" ]; then
-            echo "No previous commit hash available. Skipping diff check."
-            exit 1
-          fi
-
-          # Get list of changed files
-          CHANGED_FILES=$(git diff --name-only "$COMMIT_BEFORE" "$COMMIT_CURRENT")
+          # Get list of changed files from GitHub API
+          curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Accept: application/vnd.github.v3+json" \
+               "https://api.github.com/repos/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.sha }}" \
+               | jq -r '.files[].filename' > changed_files.txt
 
           # Check if any changed files are in the chatbotmain directory
-          if echo "$CHANGED_FILES" | grep -q '^chatbotmain/'; then
+          if grep -q '^chatbotmain/' changed_files.txt; then
             CHATBOT_MAIN_CHANGED=true
           fi
 
           # Check if any changed files are in the chatbotprocess directory
-          if echo "$CHANGED_FILES" | grep -q '^chatbotprocess/'; then
+          if grep -q '^chatbotprocess/' changed_files.txt; then
             CHATBOT_PROCESS_CHANGED=true
           fi
 
