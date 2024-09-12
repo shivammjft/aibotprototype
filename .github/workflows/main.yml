@@ -68,7 +68,7 @@ jobs:
               fi
 
               echo "Rebuilding and running container chatbotmain..."
-              cd /path/to/chatbotmain # Navigate to the correct directory if necessary
+              cd aibotprototype/main_server/
               sudo docker build -t chatbotmain .
               sudo docker run -d -p 8000:8000 chatbotmain
             fi
@@ -89,7 +89,7 @@ jobs:
               fi
 
               echo "Rebuilding and running container chatbotprocess..."
-              cd /path/to/chatbotprocess # Navigate to the correct directory if necessary
+              cd aibotprototype/processing_server
               sudo docker build -t chatbotprocess .
               sudo docker run -d -p 9000:9000 chatbotprocess
             fi
