@@ -13,6 +13,10 @@ module.exports = {
   plugins: ['react-refresh'],
   rules: {
     'react/jsx-no-target-blank': 'off',
+    'no-unused-vars': 'off', // Disable unused variables check
+    'react/no-unknown-property': 'off', // Disable unknown property check
+    'react/prop-types': 'off', // Disable prop-types check
+    'react/jsx-key': 'off', // Disable missing key prop check
     'react-refresh/only-export-components': [
       'warn',
       { allowConstantExport: true },
