@@ -31,7 +31,8 @@ node_modules/
 docker-compose.override.yml
 
 # Ignore other directories
-proces/
+process/
+qdrant_storage
 main/
 chatbot/
 

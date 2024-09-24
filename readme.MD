@@ -15,38 +15,36 @@ Run the Redis server in a Docker container and connect it to the chatbotnetwork:
 
 ```bash
 Copy code
-sudo docker run -d -p 6379:6379 redis:latest
+sudo docker run --network chatbotnetwork --name reids-server -d -p 6379:6379 redis:latest
 ```
 
 ### 3. Run the RabbitMQ Server
 
 ```bash
 Copy code
-docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
+docker run --network chatbotnetwork --name rabbitmq -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
 ```
 
 ### 4. Run the Qdrant Server
 
 ```bash
 Copy code
-docker run -p 6333:6333 -p 6334:6334 \
+docker run --network chatbotnetwork --name qdrant -p 6333:6333 -p 6334:6334 \
 -v $(pwd)/qdrant_storage:/qdrant/storage:z \
     qdrant/qdrant
 ```
 
-### 6. Run the Main Server with the env
+### 6. Run the Main Server after building the latest image
 
 ```bash
-cd main_server
-uvicorn main:app --port 8000 --reload
+ sudo docker run --network chatbotnetwork  -e MYSQL_URI='mysql+pymysql://<user>:<password>@<your Ip>:3306/chatbotserver' -e OPENAI_API_KEY='' -e LANGCHAIN_API_KEY='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' -e DEEP_INFRA_API_KEY='' -e REDIS_URL='redis://redis-server:6379/0' -p 8000:8000 chatbotmain
 
 ```
 
-### 7. Run the Processing Server with the env
+### 7. Run the Processing Server after building the latest image
 
 ```bash
-cd processing_server
-uvicorn main:app --port 9000 --reload
+sudo docker run --network chatbotnetwork  -e MYSQL_URI='mysql+pymysql://<user>:<password>@<your Ip>:3306/chatbotserver' -e OPENAI_API_KEY='' -e MAILJET_API_KEY='b206a37878213791ca36f654de1a5ee4' -e MAILJET_SECRET_KEY='0186662647f8ca1a38953139ce28ff3a' -e SENDER='shivam.pandey@jellyfishtechnologies.com' -p 9000:9000 chatbotprocess
 
 ```
 
