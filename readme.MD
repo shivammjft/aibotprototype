@@ -22,14 +22,14 @@ sudo docker run --network chatbotnetwork --name reids-server -d -p 6379:6379 red
 
 ```bash
 Copy code
-docker run --network chatbotnetwork --name rabbitmq -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
+sudo docker run --network chatbotnetwork --name rabbitmq -it --rm --name rabbitmq -d -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
 ```
 
 ### 4. Run the Qdrant Server
 
 ```bash
 Copy code
-docker run --network chatbotnetwork --name qdrant -p 6333:6333 -p 6334:6334 \
+sudo docker run --network chatbotnetwork --name qdrant -d -p 6333:6333 -p 6334:6334 \
 -v $(pwd)/qdrant_storage:/qdrant/storage:z \
     qdrant/qdrant
 ```
