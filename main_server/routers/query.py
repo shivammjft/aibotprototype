@@ -43,8 +43,13 @@ async def answer_query(req: RequestModel,request :Request,db:db_dependency,user:
         session_id = req.session_id
     
         origin_url = request.headers["origin"]
-
         chatbot_stats = db.query(Chatbot_stats).filter(Chatbot_stats.chatbot_id == req.chatbot_id).first()
+        
+        if not chatbot_stats:
+            raise HTTPException(status_code=404,detail="Chatbot not found")
+        print("Chatbot Origin URL:", chatbot_stats.origin_url)
+        print("Request Origin URL:", origin_url)
+
         if chatbot_stats.origin_url != origin_url:
             raise HTTPException(status_code=401,detail="Unautorized Domain")
 
