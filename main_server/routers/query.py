@@ -60,6 +60,7 @@ async def answer_query(req: RequestModel,request :Request,db:db_dependency,user:
 
         if chatbot_stats.origin_url.strip() != origin_url.strip():
             raise HTTPException(status_code=401, detail="Unauthorized Domain")
+        
         rag_chain = prompt | llm | StrOutputParser()
         with_message_history = RunnableWithMessageHistory(
             rag_chain,
@@ -79,9 +80,14 @@ async def answer_query(req: RequestModel,request :Request,db:db_dependency,user:
 
 
         query_model = db.query(Queries).filter(Queries.company_id == user.id,Queries.chatbot_id == req.chatbot_id, Queries.session_id == req.session_id,Queries.query_text_user == req.query).first()
+
+        if query_model is None:
+            raise HTTPException(status_code=404, detail="Query not found")
         # Combine context, history, and user query into a single input string
 
         context = query_model.query_context
+        if context is None:
+            raise HTTPException(status_code=500, detail="Query context is None")
         combined_input = f"{context}\n{history}\n{req.query}"
         input_token = count_tokens(combined_input)+10
         output_token = count_tokens(final_response)
