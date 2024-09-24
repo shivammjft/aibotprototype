@@ -11,7 +11,7 @@ QUEUE_NAME = "COMPANY_INIT"
 
 def start_rabbitmq_consumer():
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=os.getenv('RABBITMQ_HOST')))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
         channel = connection.channel()
         channel.queue_declare(queue=QUEUE_NAME, durable=True)
         print(' [*] Waiting for messages. To exit press CTRL+C')
