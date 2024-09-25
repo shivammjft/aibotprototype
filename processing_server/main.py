@@ -3,23 +3,30 @@ from consumer import callback
 import pika
 import threading
 from dotenv import load_dotenv
+import logging
 import os
 load_dotenv()
 app = FastAPI()
 
 QUEUE_NAME = "COMPANY_INIT"
 
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 def start_rabbitmq_consumer():
     try:
+        logger.info('Starting RabbitMQ consumer...')
         connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
         channel = connection.channel()
         channel.queue_declare(queue=QUEUE_NAME, durable=True)
-        print(' [*] Waiting for messages. To exit press CTRL+C')
+        logger.info('Waiting for messages...')
         channel.basic_qos(prefetch_count=1)
         channel.basic_consume(queue=QUEUE_NAME, on_message_callback=callback)
         channel.start_consuming()
     except pika.exceptions.AMQPConnectionError as e:
-        print(f"Error connecting to RabbitMQ: {e}")
+        logger.error(f"Error connecting to RabbitMQ: {e}")
 
 @app.on_event("startup")
 async def startup_event():
