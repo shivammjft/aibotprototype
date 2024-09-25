@@ -64,7 +64,7 @@ async def prepare_DB(docs, collection_name):
     logger.info("----------------Creating Index------------------------")
 
     uuids = [str(uuid4()) for _ in range(len(text_chunks))]
-    client = QdrantClient(url='http://qdrant:6333', timeout=60)
+    client = QdrantClient(url='http://qdrant:6333')
     logger.info("Connecting to Qdrant")
 
     if not client.collection_exists(collection_name):
