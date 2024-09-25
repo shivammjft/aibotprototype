@@ -49,19 +49,19 @@ def context_retriever(query,session_id,company_id,chatbot_id,db,collection_name,
         vectorstore = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=collection_name, url='http://qdrant:6333')
         docs = vectorstore.similarity_search(query, k=5)
         content = ""
-        # if len(docs) != 0:
-        #     for i in range(len(docs)):
-        #         try:
-        #             page_content = docs[i].page_content 
-        #             source = docs[i].metadata.get('source', "")
-        #             title = docs[i].metadata.get('title', "")
-        #             description = docs[i].metadata.get('description', "")
+        if len(docs) != 0:
+            for i in range(len(docs)):
+                try:
+                    page_content = docs[i].page_content 
+                    source = docs[i].metadata.get('source', "")
+                    title = docs[i].metadata.get('title', "")
+                    description = docs[i].metadata.get('description', "")
                     
-        #             content += f"""{i+1}. Content: {page_content}.\nContent's Page URL: {source}.\nTitle of the page: {title}.\nDescription of the page: {description}.\n"""
-        #         except Exception as e:
-        #             content = f"An error occurred while processing document {i}: {str(e)}"
-        # else:
-        #     content = "Frame a professional answer which shows the positive image of the company and should be relevant to the query, don't answer on your own if you think question is not relevant to companies benfits"
+                    content += f"""{i+1}. Content: {page_content}.\nContent's Page URL: {source}.\nTitle of the page: {title}.\nDescription of the page: {description}.\n"""
+                except Exception as e:
+                    content = f"An error occurred while processing document {i}: {str(e)}"
+        else:
+            content = "Frame a professional answer which shows the positive image of the company and should be relevant to the query, don't answer on your own if you think question is not relevant to companies benfits"
         
     except Exception as e:
         content = f"An error occurred: {str(e)}"
