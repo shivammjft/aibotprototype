@@ -22,4 +22,10 @@ class ClientRequest(BaseModel):
     deployment_url:Optional[HttpUrl]  
     chatbot_name: str = Field(min_length=1, max_length=100)
 
+class AddDataRequest(BaseModel):
+    text: str           
+    source: str         
+    title: str          
+    description: str  
+    collection_name: str 
 
