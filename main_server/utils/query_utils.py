@@ -48,9 +48,8 @@ def context_retriever(query,session_id,company_id,chatbot_id,db,collection_name,
     try:
         vectorstore = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=collection_name, url='http://qdrant:6333')
         docs = vectorstore.similarity_search(query, k=5)
+        content = ""
         if len(docs) != 0:
-
-            content = ""
             for i in range(len(docs)):
                 try:
                     page_content = docs[i].page_content 
