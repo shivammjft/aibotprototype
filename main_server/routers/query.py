@@ -88,48 +88,48 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
             config={"configurable": {"session_id": req.session_id}},
         )
 
-        history = get_message_history(req.session_id)
-        if history is None:
-            logger.error("Message history retrieval failed for session ID: %s", req.session_id)
-            raise HTTPException(status_code=500, detail="Message history retrieval failed")
+        # history = get_message_history(req.session_id)
+        # if history is None:
+        #     logger.error("Message history retrieval failed for session ID: %s", req.session_id)
+        #     raise HTTPException(status_code=500, detail="Message history retrieval failed")
 
-        query_model = db.query(Queries).filter(
-            Queries.company_id == user.id,
-            Queries.chatbot_id == req.chatbot_id,
-            Queries.session_id == req.session_id,
-            Queries.query_text_user == req.query
-        ).first()
+        # query_model = db.query(Queries).filter(
+        #     Queries.company_id == user.id,
+        #     Queries.chatbot_id == req.chatbot_id,
+        #     Queries.session_id == req.session_id,
+        #     Queries.query_text_user == req.query
+        # ).first()
 
-        if query_model is None:
-            logger.error("Query not found for user ID: %s, chatbot ID: %s, session ID: %s", user.id, req.chatbot_id, req.session_id)
-            raise HTTPException(status_code=404, detail="Query not found")
+        # if query_model is None:
+        #     logger.error("Query not found for user ID: %s, chatbot ID: %s, session ID: %s", user.id, req.chatbot_id, req.session_id)
+        #     raise HTTPException(status_code=404, detail="Query not found")
 
-        context = query_model.query_context
-        if context is None:
-            logger.error("Query context is None for session ID: %s", req.session_id)
-            raise HTTPException(status_code=500, detail="Query context is None")
+        # context = query_model.query_context
+        # if context is None:
+        #     logger.error("Query context is None for session ID: %s", req.session_id)
+        #     raise HTTPException(status_code=500, detail="Query context is None")
 
-        combined_input = f"{context}\n{history}\n{req.query}"
-        input_token = count_tokens(combined_input) + 10
-        output_token = count_tokens(final_response)
+        # combined_input = f"{context}\n{history}\n{req.query}"
+        # input_token = count_tokens(combined_input) + 10
+        # output_token = count_tokens(final_response)
 
-        query_model.query_text_bot = final_response
-        query_model.input_tokens = input_token
-        query_model.output_tokens = output_token
-        query_model.origin_url = origin_url
+        # query_model.query_text_bot = final_response
+        # query_model.input_tokens = input_token
+        # query_model.output_tokens = output_token
+        # query_model.origin_url = origin_url
 
-        chatbot_stats.total_input_tokens += input_token
-        chatbot_stats.total_output_tokens += output_token
-        chatbot_stats.total_queries += 1
-        chatbot_stats.last_query_time = datetime.datetime.now()
+        # chatbot_stats.total_input_tokens += input_token
+        # chatbot_stats.total_output_tokens += output_token
+        # chatbot_stats.total_queries += 1
+        # chatbot_stats.last_query_time = datetime.datetime.now()
 
    
-        company = db.query(Company).filter(Company.id == user.id).first()
-        if company:
-            company.input_tokens += input_token
-            company.output_tokens += output_token
+        # company = db.query(Company).filter(Company.id == user.id).first()
+        # if company:
+        #     company.input_tokens += input_token
+        #     company.output_tokens += output_token
         
-        db.commit()
+        # db.commit()
         logger.info("Successfully processed query for user ID: %s", user.id)
 
         return final_response
