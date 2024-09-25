@@ -13,7 +13,7 @@ from typing import Annotated
 import datetime
 from utils.query_utils import count_tokens
 import logging
-
+import traceback
 router = APIRouter(tags=['query'])
 
 
@@ -43,7 +43,10 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
         collection_name = user.company_key
         chatbot_id = req.chatbot_id
         session_id = req.session_id
-        
+        logger.info("Chatbot ID: %s", req.chatbot_id)
+        logger.info("Session ID: %s", req.session_id)
+        logger.info("Company Key: %s", user.company_key)
+
         logger.info("Request Headers: %s", request.headers)
 
         origin_url = request.headers.get("origin")
@@ -135,5 +138,6 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(ae)}")
     except Exception as e:
         logger.error("An unexpected error occurred: %s", str(e))
+        logger.error("Traceback: %s", traceback.format_exc())
         db.rollback()  # Rollback on error
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
