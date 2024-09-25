@@ -63,5 +63,5 @@ async def get_current_user(request: Request) -> dict:
         logger.warning("User not found for token: %s", token)
         raise HTTPException(status_code=404, detail="User not found")
     
-    logger.info("User successfully retrieved: %s", user['username'])  
+    logger.info("User successfully retrieved: %s")  
     return user
