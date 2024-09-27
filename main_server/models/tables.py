@@ -36,6 +36,7 @@ class Chatbot_stats(Base):
     id = Column(Integer,index=True)
     chatbot_id = Column(String(255),primary_key=True)
     chatbot_name  = Column(String(255))
+    chatbot_prompt = Column(Text)
     company_id = Column(Integer, ForeignKey("companies.id"))
     origin_url = Column(String(255))
     company_name = Column(String(255))
@@ -47,7 +48,6 @@ class Chatbot_stats(Base):
 
 
 class Queries(Base):
-
     __tablename__ = "queries"
 
     id = Column(Integer,index=True,primary_key=True)
@@ -61,3 +61,4 @@ class Queries(Base):
     output_tokens = Column(String(255))
     query_time = Column(DateTime)
     origin_url = Column(String(255))
+

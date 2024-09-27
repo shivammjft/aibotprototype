@@ -9,7 +9,7 @@ from langchain_core.documents import Document
 router = APIRouter(prefix='/admin', tags=['Admin'])
 
 
-qdrant_client = QdrantClient(url="http://localhost:6333", timeout=300) 
+qdrant_client = QdrantClient(url="http://64.227.160.209:6333", timeout=300) 
 
 
  
@@ -24,7 +24,7 @@ async def add_to_collection(data: AddDataRequest):
             page_content=data.text,
             metadata={"source": data.source, "title": data.title, "description": data.description},
         )
-        vector_store = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=data.collection_name, url="http://localhost:6333")
+        vector_store = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=data.collection_name, url="http://64.227.160.209:6333")
         vector_store.add_documents(
             documents=[document],
             ids=[document_id],
