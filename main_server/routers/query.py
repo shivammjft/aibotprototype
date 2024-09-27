@@ -29,13 +29,7 @@ def get_db():
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", user_message),
-        MessagesPlaceholder(variable_name="history"),
-        ("human", "{input}"),
-    ]
-)
+
 
 @router.post("/query")
 async def answer_query(req: RequestModel, request: Request, db: db_dependency, user: dict = Depends(get_current_user)):
@@ -58,6 +52,15 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
         if not chatbot_stats:
             logger.error("Chatbot not found: %s", req.chatbot_id)
             raise HTTPException(status_code=404, detail="Chatbot not found")
+        
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", Chatbot_stats.chatbot_prompt),
+                MessagesPlaceholder(variable_name="history"),
+                ("human", "{input}"),
+            ]
+        )
 
         if chatbot_stats.origin_url is None:
             logger.error("Chatbot origin URL is None")

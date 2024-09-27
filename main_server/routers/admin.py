@@ -11,6 +11,9 @@ from pydantic import HttpUrl
 import os
 import logging
 
+from models.schems import UpdatePromptRequest
+from sqlalchemy.exc import NoResultFound
+
 router = APIRouter(prefix='/admin', tags=['Admin'])
 
 
@@ -189,3 +192,22 @@ async def upload_files(company_name: str, base_url: HttpUrl, files: list[UploadF
     except Exception as e:
         logger.error("Error uploading files: %s", str(e))
         raise HTTPException(status_code=500, detail="Error uploading files")
+
+
+@router.put("/chatbot/{chatbot_id}/prompt")
+async def update_chatbot_prompt(chatbot_id: str, prompt_request: UpdatePromptRequest, user: user_dependency, db: Session = Depends(get_db)):
+    try:
+        chatbot = db.query(Chatbot_stats).filter(Chatbot_stats.chatbot_id == chatbot_id).first()
+        if chatbot is None:
+            raise HTTPException(status_code=404, detail="Chatbot not found")
+        chatbot.chatbot_prompt = prompt_request.chatbot_prompt
+        db.commit()
+        db.refresh(chatbot)
+        
+        return {"message": "Chatbot prompt updated successfully", "chatbot_id": chatbot.chatbot_id, "chatbot_prompt": chatbot.chatbot_prompt}
+
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="Chatbot not found")
+    except Exception as e:
+        db.rollback() 
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
