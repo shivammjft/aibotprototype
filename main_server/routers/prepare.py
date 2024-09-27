@@ -11,6 +11,7 @@ import json
 import logging
 import os
 from dotenv import load_dotenv
+from constants.prompts import user_message
 
 load_dotenv()
 
@@ -59,6 +60,7 @@ def add_company(req: ClientRequest, db: db_dependency):
         create_chatbot_model = Chatbot_stats(
             chatbot_id=chatbot_id,
             chatbot_name=req.chatbot_name,
+            chatbot_prompt=user_message,
             company_id=company_id,
             origin_url=req.deployment_url,
             company_name=req.company_name,
@@ -67,6 +69,7 @@ def add_company(req: ClientRequest, db: db_dependency):
             total_queries=0,
             last_query_time=datetime.now(),
         )
+    
         db.add(create_chatbot_model)
 
         message_body = {

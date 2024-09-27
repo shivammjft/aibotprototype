@@ -32,7 +32,7 @@ app.add_middleware(
 
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_ENDPOINT"] = "https://api.smith.langchain.com"
-os.getenv("LANGCHAIN_API_KEY")  # Ensure this key is loaded
+os.getenv("LANGCHAIN_API_KEY")  
 os.environ["LANGCHAIN_PROJECT"] = "Chatbot Doc Mapping"
 
 @app.get("/")

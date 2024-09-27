@@ -29,3 +29,6 @@ class AddDataRequest(BaseModel):
     description: str  
     collection_name: str 
 
+class UpdatePromptRequest(BaseModel):
+    chatbot_prompt: str
+
