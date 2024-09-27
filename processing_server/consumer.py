@@ -20,7 +20,6 @@ from langchain_qdrant import QdrantVectorStore
 from qdrant_client.models import Distance, VectorParams
 from config.db import SessionLocal
 import logging
-
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
@@ -45,59 +44,7 @@ async def process(url, company_id):
     docs = parallel_load(links, os.cpu_count())
     await prepare_DB(docs, company_id)
 
-# async def prepare_DB(docs, collection_name, retry_attempts=3):
-#     global TOPIC_NAME
-#     logger.info("----------------Preparing Database--------------------")
 
-#     logger.info("----------------Preprocessing Data--------------------")
-#     for doc in docs:
-#         text = preprocess_text(doc.page_content)
-#         doc.page_content = text
-    
-#     logger.info("-------------Chunking Data------------------------")
-#     text_chunks = chunk_text(docs)
-#     logger.info(f"Number of text chunks: {len(text_chunks)}")
-
-#     logger.info("----------------Creating Embeddings--------------------")
-#     embeddings = OpenAIEmbeddings()
-
-#     logger.info("----------------Connecting to Qdrant-------------------")
-#     client = QdrantClient(url='http://qdrant:6333', timeout=300)  
-
-#     logger.info("----------------Creating Index------------------------")
-#     if not client.collection_exists(collection_name):
-#         logger.info(f"Collection {collection_name} does not exist. Creating collection.")
-#         client.create_collection(
-#             collection_name=collection_name, 
-#             vectors_config=VectorParams(size=1536, distance=Distance.COSINE)
-#         )
-    
-#     uuids = [str(uuid4()) for _ in range(len(text_chunks))]
-#     vector_store = QdrantVectorStore(
-#         client=client,
-#         collection_name=collection_name,
-#         embedding=embeddings,
-#     )
-
-#     logger.info("----------------Storing in Qdrant Collection----------------")
-#     await retry_upsert(vector_store, text_chunks, uuids, retry_attempts)
-
-# async def retry_upsert(vector_store, text_chunks, uuids, retries=3):
-#     for attempt in range(retries):
-#         try:
-#             logger.info(f"Attempt {attempt + 1} to store documents in Qdrant.")
-#             vector_store.add_documents(documents=text_chunks, ids=uuids)
-#             logger.info(f"Successfully stored {len(text_chunks)} documents in Qdrant.")
-#             break
-#         except Exception as e:
-#             logger.error(f"Error during upsert: {str(e)}")
-#             if attempt < retries - 1:
-#                 logger.info(f"Retrying after attempt {attempt + 1}...")
-#                 await asyncio.sleep(2 ** attempt)  
-#             else:
-#                 logger.error(f"Failed to store documents in Qdrant after {retries} attempts.")
-#                 raise e
-            
 async def prepare_DB(docs, collection_name, batch_size=100, retry_attempts=3):
     logger.info("----------------Preparing Database--------------------")
 
@@ -175,7 +122,6 @@ def callback(ch, method, properties, body):
         collection_name = company_document.company_key
         email = company_document.email
         
-        # Run asynchronous process function
         asyncio.run(process(company_document.base_url, company_key))
         
         CHATBOT_KEY = chatbot_document.chatbot_id
