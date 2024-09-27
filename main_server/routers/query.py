@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 from utils.auth import get_current_user
 from utils.query_utils import llm, get_message_history, context_retriever
 from constants.prompts import user_message
-from models.schems import RequestModel 
+from models.schems import RequestModel ,SendChat
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -14,6 +15,8 @@ import datetime
 from utils.query_utils import count_tokens
 import logging
 import traceback
+from constants.email import bot_chat_template
+from utils.mailket_utils import send_email_with_template
 router = APIRouter(tags=['query'])
 
 
@@ -144,3 +147,51 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
         logger.error("Traceback: %s", traceback.format_exc())
         db.rollback()  # Rollback on error
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+
+@router.post("/send-chat/")
+def send_chat_email(req: SendChat, request: Request, db: db_dependency,user: dict = Depends(get_current_user)):
+    try:
+        logger.info("Incoming Request: %s", request)
+        chatbot_id = req.chatbot_id
+        session_id = req.session_id
+        chat_history = req.chatHistory
+        logger.info("Chatbot ID: %s", req.chatbot_id)
+        logger.info("Session ID: %s", req.session_id)
+
+
+
+        ip_address = request.client.host
+        logger.info("Incoming Request Ip: %s", ip_address)
+        print(ip_address)
+        origin_url = request.headers.get("origin")
+        if origin_url is None:
+            logger.error("Missing Origin Header")
+            raise HTTPException(status_code=400, detail="Missing Origin Header")
+        
+        chatbot_stats = db.query(Chatbot_stats).filter(Chatbot_stats.chatbot_id == chatbot_id).first()
+        if not chatbot_stats:
+            logger.error("Chatbot not found: %s", req.chatbot_id)
+            raise HTTPException(status_code=404, detail="Chatbot not found")
+
+        email = 'info@jellyfishtechnologies.com'
+        send_email_with_template(
+            recipent_email=email,
+            subject="Chatbot Chat",
+            company_name=user.company_name,
+            base_link=chatbot_stats.origin_url,
+            chatbot_name=chatbot_stats.chatbot_name,
+            session_id=session_id,
+            ip_address=ip_address,
+            chat_history=chat_history,
+            template=bot_chat_template
+        )
+
+        return JSONResponse(content={"status": "200", 'message': 'Email sent successfully'})
+
+    except Exception as e:
+        logger.error("An unexpected error occurred: %s", str(e))
+        logger.error("Traceback: %s", traceback.format_exc())
+        db.rollback() 
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+    

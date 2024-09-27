@@ -99,3 +99,7 @@ def add_company(req: ClientRequest, db: db_dependency):
     except Exception as e:
         logger.error("An error occurred: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+

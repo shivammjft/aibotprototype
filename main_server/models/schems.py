@@ -32,3 +32,8 @@ class AddDataRequest(BaseModel):
 class UpdatePromptRequest(BaseModel):
     chatbot_prompt: str
 
+
+class SendChat(BaseModel):
+    chatHistory:List
+    chatbot_id:str
+    session_id:str
