@@ -44,6 +44,34 @@ text_splitter = RecursiveCharacterTextSplitter(
 
 
 
+def escape_template_string(template: str) -> str:
+    """
+    Escapes special characters in the template string.
+
+    Args:
+        template (str): The original template string.
+
+    Returns:
+        str: The escaped template string.
+    """
+
+    escaped_template = template.replace("'", "\\'")
+  
+    escaped_template = escaped_template.replace('"', '\\"')
+    
+   
+    escaped_template = escaped_template.replace("\\", "\\\\")
+
+    escaped_template = escaped_template.replace("\n", "\\n")
+
+    escaped_template = escaped_template.replace("\r", "\\r")
+
+    escaped_template = escaped_template.replace("\t", "\\t")
+    
+    return escaped_template
+
+
+
 def context_retriever(query,session_id,company_id,chatbot_id,db,collection_name, embeddings=OpenAIEmbeddings()):
     try:
         vectorstore = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=collection_name, url='http://qdrant:6333')

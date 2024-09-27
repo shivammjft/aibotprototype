@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from utils.auth import get_current_user
-from utils.query_utils import llm, get_message_history, context_retriever
+from utils.query_utils import llm, get_message_history, context_retriever,escape_template_string
 from constants.prompts import user_message
 from models.schems import RequestModel ,SendChat
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -55,15 +55,20 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
         if not chatbot_stats:
             logger.error("Chatbot not found: %s", req.chatbot_id)
             raise HTTPException(status_code=404, detail="Chatbot not found")
-        
+
+        logger.error("Prompt tmeplate: Type %s", type(Chatbot_stats.chatbot_prompt))
+
+        promt_template = escape_template_string(Chatbot_stats.chatbot_prompt)
 
         prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", Chatbot_stats.chatbot_prompt),
+                ("system", promt_template),
                 MessagesPlaceholder(variable_name="history"),
                 ("human", "{input}"),
             ]
         )
+
+
 
         if chatbot_stats.origin_url is None:
             logger.error("Chatbot origin URL is None")
