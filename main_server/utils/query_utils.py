@@ -87,6 +87,8 @@ def context_retriever(query,session_id,company_id,chatbot_id,db,collection_name,
         }
         crawled_docs = vectorstore.similarity_search(query, k=2)
         manual_docs = vectorstore.similarity_search(query, k=2, filter=manual_filter)
+        if not manual_docs:
+            manual_docs = []
         docs = manual_docs + crawled_docs 
         content = ""
         if len(docs) != 0:
