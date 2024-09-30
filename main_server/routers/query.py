@@ -56,9 +56,9 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
             logger.error("Chatbot not found: %s", req.chatbot_id)
             raise HTTPException(status_code=404, detail="Chatbot not found")
 
-        logger.info("Prompt tmeplate: Type %s", type(Chatbot_stats.chatbot_prompt))
+        logger.info("Prompt tmeplate: Type %s", type(chatbot_stats.chatbot_prompt))
 
-        promt_template = Chatbot_stats.chatbot_prompt
+        promt_template = chatbot_stats.chatbot_prompt
 
         logger.info("Prompt tmeplate: %s", promt_template)
 
