@@ -58,7 +58,9 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
 
         logger.info("Prompt tmeplate: Type %s", type(Chatbot_stats.chatbot_prompt))
 
-        promt_template = escape_template_string(Chatbot_stats.chatbot_prompt)
+        promt_template = Chatbot_stats.chatbot_prompt
+
+        logger.info("Prompt tmeplate: %s", promt_template)
 
         prompt = ChatPromptTemplate.from_messages(
             [
