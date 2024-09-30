@@ -75,7 +75,9 @@ def escape_template_string(template: str) -> str:
 def context_retriever(query,session_id,company_id,chatbot_id,db,collection_name, embeddings=OpenAIEmbeddings()):
     try:
         vectorstore = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=collection_name, url='http://qdrant:6333')
-        docs = vectorstore.similarity_search(query, k=5)
+        crawled_docs = vectorstore.similarity_search(query, k=2)
+        manual_docs = vectorstore.similarity_search(query, k=2, filter={"metadata.source": "manual"})
+        docs = crawled_docs + manual_docs
         content = ""
         if len(docs) != 0:
             for i in range(len(docs)):
