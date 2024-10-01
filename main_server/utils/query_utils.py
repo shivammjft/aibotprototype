@@ -48,13 +48,7 @@ text_splitter = RecursiveCharacterTextSplitter(
 )
 
 
-def route(info):
-    if "anthropic" in info["topic"].lower():
-        return anthropic_chain
-    elif "langchain" in info["topic"].lower():
-        return langchain_chain
-    else:
-        return general_chain
+meeting_finder = ["schedule", "meeting", "appointment", "call", "discuss", "connect", "book"]
 
 
 def escape_template_string(template: str) -> str:
@@ -86,6 +80,24 @@ def escape_template_string(template: str) -> str:
 
 
 def context_retriever(query,session_id,company_id,chatbot_id,db,collection_name, embeddings=OpenAIEmbeddings()):
+    """
+    Retrieves the context for the given query by searching the Qdrant vector database
+    and retrieving the most similar documents. If no documents are found, it returns
+    a default message.
+
+    Args:
+        query (str): The query to retrieve context for.
+        session_id (str): The session ID of the user.
+        company_id (str): The ID of the company.
+        chatbot_id (str): The ID of the chatbot.
+        db (Session): The database session.
+        collection_name (str): The name of the Qdrant collection.
+        embeddings (Embeddings, optional): The embeddings to use for the search. Defaults to OpenAIEmbeddings.
+
+    Returns:
+        str: The retrieved context.
+    """
+
     try:
         vectorstore = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=collection_name, url='http://qdrant:6333')
         manual_filter={

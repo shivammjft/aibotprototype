@@ -14,7 +14,7 @@ from typing import Annotated
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 import datetime
 from langchain_core.runnables import RunnableLambda
-from utils.query_utils import count_tokens
+from utils.query_utils import count_tokens,meeting_finder
 import logging
 import traceback
 from constants.email import bot_chat_template
@@ -75,7 +75,6 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
         )
 
 
-
         if chatbot_stats.origin_url is None:
             logger.error("Chatbot origin URL is None")
             raise HTTPException(status_code=500, detail="Chatbot origin URL is None")
@@ -98,6 +97,20 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
             history_messages_key="history",
         )
 
+
+        with_message_history_and_agent = RunnableWithMessageHistory(
+            agent_executor,
+            get_message_history,
+            input_messages_key="input",
+            history_messages_key="history",
+        )
+
+        final_response = with_message_history
+        for i in meeting_finder:
+            if i in req.query.lower():
+                final_chain = with_message_history_and_agent
+        final_response = with_message_history
+
         
         final_response = await with_message_history.ainvoke(
             {
@@ -108,6 +121,7 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
             },
             config={"configurable": {"session_id": req.session_id}},
         )
+
 
         history = get_message_history(req.session_id)
         if history is None:
