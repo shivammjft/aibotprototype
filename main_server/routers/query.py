@@ -11,14 +11,18 @@ from models.tables import Company, Queries, Chatbot_stats
 from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from typing import Annotated
+from langchain.agents import AgentExecutor, create_tool_calling_agent
 import datetime
+from langchain_core.runnables import RunnableLambda
 from utils.query_utils import count_tokens
 import logging
 import traceback
 from constants.email import bot_chat_template
 from utils.mailket_utils import send_email_with_template
+from langchain_core.runnables import RunnableBranch
 router = APIRouter(tags=['query'])
 
+tools=[]
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -84,6 +88,9 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
             raise HTTPException(status_code=401, detail="Unauthorized Domain")
         
         rag_chain = prompt | llm | StrOutputParser()
+        agent = create_tool_calling_agent(llm, tools, prompt)
+        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
         with_message_history = RunnableWithMessageHistory(
             rag_chain,
             get_message_history,
@@ -91,6 +98,7 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
             history_messages_key="history",
         )
 
+        
         final_response = await with_message_history.ainvoke(
             {
                 "context": context_retriever(req.query, session_id, user.id, chatbot_id, db, collection_name),
