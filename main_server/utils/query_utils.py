@@ -12,6 +12,8 @@ from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from typing import Annotated
 import logging
+from langchain.pydantic_v1 import BaseModel, Field
+from langchain.tools import BaseTool, StructuredTool, tool
 from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -35,6 +37,9 @@ def get_message_history(session_id: str) -> RedisChatMessageHistory:
     return RedisChatMessageHistory(session_id, url=os.getenv("REDIS_URL"))
 
 
+
+
+
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=200,
     chunk_overlap=20,
@@ -42,6 +47,14 @@ text_splitter = RecursiveCharacterTextSplitter(
     is_separator_regex=False,
 )
 
+
+def route(info):
+    if "anthropic" in info["topic"].lower():
+        return anthropic_chain
+    elif "langchain" in info["topic"].lower():
+        return langchain_chain
+    else:
+        return general_chain
 
 
 def escape_template_string(template: str) -> str:
