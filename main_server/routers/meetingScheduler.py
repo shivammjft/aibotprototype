@@ -13,10 +13,8 @@ from google.auth.transport.requests import Request
 import logging
 from dateutil.parser import parse
 
-# Load environment variables
 load_dotenv()
 
-# Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -42,7 +40,7 @@ def get_free_slots(attendees, event_date):
     
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            # creds.refresh(Request())
+            creds.refresh(Request())
             pass
         else:
             flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
@@ -167,7 +165,6 @@ def create_event(attendees, event_date, event_time):
 def send_email_with_template(recipient_email, subject, meeting_link):
     logger.info("Preparing to send email to %s", recipient_email)
 
-    # Template can be defined here or loaded from a file
     template = """
     <html>
         <body>
@@ -181,9 +178,9 @@ def send_email_with_template(recipient_email, subject, meeting_link):
     jinja_template = Template(template)
     html_content = jinja_template.render(meeting_link=meeting_link)
 
-    sender_email = 'shivam.pandey@jellyfishtechnologies.com'
-    api_key = 'b206a37878213791ca36f654de1a5ee4'
-    api_secret = '0186662647f8ca1a38953139ce28ff3a'
+    sender_email = os.getenv("SENDER_EMAIL")
+    api_key = os.getenv("MAILJET_API_KEY")
+    api_secret = os.getenv("MAILJET_SECRET_KEY")
     
     logger.info("Initializing Mailjet client")
     mailjet = Client(auth=(api_key, api_secret), version='v3.1')
