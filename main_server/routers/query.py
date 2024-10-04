@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from typing import Annotated
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 import datetime
+from utils.tools import meeting_tool_calls_handler
 from langchain_core.runnables import RunnableLambda
 from utils.query_utils import count_tokens,meeting_finder
 import logging
@@ -62,6 +63,18 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
 
         logger.info("Prompt tmeplate: Type %s", type(chatbot_stats.chatbot_prompt))
 
+        full_context = "/n".join(req.context)
+        messages = [
+        {
+        "role": "user",
+        "content": full_context
+        }   
+        ]
+        for i in meeting_finder:
+            if i in full_context.lower():
+                final_response=meeting_tool_calls_handler(messages)
+                return final_response
+
         promt_template = chatbot_stats.chatbot_prompt
 
         logger.info("Prompt tmeplate: %s", promt_template)
@@ -87,8 +100,8 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
             raise HTTPException(status_code=401, detail="Unauthorized Domain")
         
         rag_chain = prompt | llm | StrOutputParser()
-        agent = create_tool_calling_agent(llm, tools, prompt)
-        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+        # agent = create_tool_calling_agent(llm, tools, prompt)
+        # agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
         with_message_history = RunnableWithMessageHistory(
             rag_chain,
@@ -98,18 +111,14 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
         )
 
 
-        with_message_history_and_agent = RunnableWithMessageHistory(
-            agent_executor,
-            get_message_history,
-            input_messages_key="input",
-            history_messages_key="history",
-        )
+        # with_message_history_and_agent = RunnableWithMessageHistory(
+        #     agent_executor,
+        #     get_message_history,
+        #     input_messages_key="input",
+        #     history_messages_key="history",
+        # )
 
-        final_response = with_message_history
-        for i in meeting_finder:
-            if i in req.query.lower():
-                final_chain = with_message_history_and_agent
-        final_response = with_message_history
+        # final_response = with_message_history
 
         
         final_response = await with_message_history.ainvoke(
