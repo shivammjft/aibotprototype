@@ -38,7 +38,7 @@ def company_to_dict(company, total_queries) -> Dict:
         "output_tokens": company.output_tokens,
         "input_token_cost": input_token_cost,
         "output_token_cost": output_token_cost,
-        "total_queries": total_queries 
+        "total_queries": float(total_queries) 
     }
 
 
