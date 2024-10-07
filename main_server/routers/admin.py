@@ -85,7 +85,16 @@ async def get_total_stats(db: db_dependency, user: user_dependency):
 async def all_companies(db: db_dependency, user: user_dependency):
     try:
         companies = db.query(Company).all()
-        companies_list = [company_to_dict(company) for company in companies]
+        total_queries_by_company = (
+            db.query(Chatbot_stats.company_id, func.sum(Chatbot_stats.total_queries).label("total_queries"))
+            .group_by(Chatbot_stats.company_id)
+            .all()
+        )
+
+        total_queries_dict = {company_id: total_queries for company_id, total_queries in total_queries_by_company}
+        companies_list = [
+            company_to_dict(company, total_queries_dict.get(company.id, 0)) for company in companies
+        ]
         logger.info("Fetched %d companies.", len(companies_list))
         
         return JSONResponse(content={
