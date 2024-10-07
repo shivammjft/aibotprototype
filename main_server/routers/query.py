@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from utils.auth import get_current_user
-from utils.query_utils import llm, get_message_history, context_retriever,escape_template_string
-from constants.prompts import user_message
+from utils.query_utils import llm, get_message_history, context_retriever
 from models.schems import RequestModel ,SendChat
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
@@ -12,14 +12,17 @@ from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from typing import Annotated
 from langchain.agents import AgentExecutor, create_tool_calling_agent
-import datetime
-from langchain_core.runnables import RunnableLambda
+from datetime import datetime
 from utils.query_utils import count_tokens,meeting_finder
 import logging
 import traceback
 from constants.email import bot_chat_template
-from utils.mailket_utils import send_email_with_template
-from langchain_core.runnables import RunnableBranch
+from typing import Optional, List
+from google.oauth2 import service_account
+import google.auth.transport.requests
+import time
+import requests
+from meetingScheduler import get_free_slots, create_event, send_email_with_template
 router = APIRouter(tags=['query'])
 
 tools=[]
@@ -36,6 +39,89 @@ def get_db():
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
+MEETING_KEYWORDS = [
+    "meeting", "schedule", "appointment", "book", "plan",
+    "arrange", "set up", "organize", "conference", "session",
+    "discussion", "call", "touch base", "catch up", "coordinate"
+]
+
+def contains_meeting_keyword(query: str) -> bool:
+    query_lower = query.lower()
+    return any(keyword in query_lower for keyword in MEETING_KEYWORDS)
+
+def check_meeting_intent(query: str, context: str) -> str:
+    prompt = (
+        """Does the provided user query indicate an intention to schedule a meeting or does the provided chat context suggest an ongoing meeting scheduling process? 
+        Respond with 'yes' if either is true; otherwise, respond with 'no'.
+
+        Query: {query}
+        Context: {context}
+        """
+    )
+    formatted_prompt = prompt.format(query=query, context=context)  
+    try:
+        response = llm.invoke(formatted_prompt)  
+        return response.strip().lower()
+    except Exception as e:
+        logger.error("LLM Error: %s", str(e))
+        return "no"
+    
+def concatenate_context(context: Optional[List[str]]) -> str:
+    if context is None:
+        return ""
+    
+    formatted_strings = []
+    for i, statement in enumerate(context):
+        if i % 2 == 0:  
+            formatted_strings.append(f"User: {statement.strip()}")
+        else:  
+            formatted_strings.append(f"Bot: {statement.strip()}")
+    return "\n".join(formatted_strings)
+
+DIALOGFLOW_PROJECT_ID = "chatbot-meeting-scheduler"
+DIALOGFLOW_URL = f"https://dialogflow.googleapis.com/v2/projects/{DIALOGFLOW_PROJECT_ID}/agent/sessions"
+
+
+credentials = service_account.Credentials.from_service_account_file(
+    'chatbot-meeting-scheduler-37092a8c0670.json',
+    scopes=['https://www.googleapis.com/auth/dialogflow']
+)
+
+request = google.auth.transport.requests.Request()
+
+DIALOGFLOW_TOKEN = None
+TOKEN_EXPIRATION_TIME = 0
+
+def get_dialogflow_token():
+    global DIALOGFLOW_TOKEN, TOKEN_EXPIRATION_TIME
+
+    if DIALOGFLOW_TOKEN is None or TOKEN_EXPIRATION_TIME is None or time.time() >= TOKEN_EXPIRATION_TIME:
+        credentials.refresh(request)
+        DIALOGFLOW_TOKEN = credentials.token
+        
+        TOKEN_EXPIRATION_TIME = credentials.expiry.timestamp()  
+
+    return DIALOGFLOW_TOKEN
+
+
+class QueryRequest(BaseModel):
+    query: str
+    session_id: str
+
+def convert_datetime_to_yyyy_mm_dd(datetime_str):
+    dt_object = datetime.fromisoformat(datetime_str)
+    formatted_date = dt_object.strftime('%Y-%m-%d')
+    return formatted_date
+
+def convert_to_hh_mm(timestamp: str) -> str:
+    dt = datetime.fromisoformat(timestamp)
+    return dt.strftime("%H:%M")
+
+
+def check_phrase_in_last_string(context, phrase):
+    if isinstance(context, str) and isinstance(phrase, str):
+        return phrase in context
+    return False
 
 
 @router.post("/query")
@@ -85,6 +171,79 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
         if chatbot_stats.origin_url.strip() != origin_url.strip():
             logger.warning("Unauthorized Domain: %s", origin_url)
             raise HTTPException(status_code=401, detail="Unauthorized Domain")
+        
+        if contains_meeting_keyword(req.query) or check_phrase_in_last_string(req.context, "thanks for all the details"):
+            logger.info("Meeting-related keyword detected in query.")
+            intent = check_meeting_intent(req.query, concatenate_context(req.context))
+            logger.info("Meeting intent determined by LLM: %s", intent)
+            if intent == 'yes':
+                try: 
+                    DIALOGFLOW_TOKEN = get_dialogflow_token()
+                    url = f"{DIALOGFLOW_URL}/{req.session_id}:detectIntent"
+                    
+                    headers = {
+                        "Authorization": f"Bearer {DIALOGFLOW_TOKEN}",
+                        "Content-Type": "application/json"
+                    }
+                    
+                    body = {
+                        "queryInput": {
+                            "text": {
+                                "text": req.query,
+                                "languageCode": "en" 
+                            }
+                        }
+                    }
+
+                    response = requests.post(url, headers=headers, json=body)
+                    
+                    if response.status_code != 200:
+                        raise HTTPException(status_code=response.status_code, detail="Error communicating with Dialogflow")
+
+                    dialogflow_response = response.json()
+                    fulfillment_text = dialogflow_response.get('queryResult', {}).get('fulfillmentText', '')
+                    parameters = dialogflow_response.get('queryResult', {}).get('parameters', {})
+                    person_name = parameters.get('person', '')
+                    email = parameters.get('email', '')
+                    date = parameters.get('date', '')
+                    time = parameters.get('time', '') 
+
+                    cancel_keywords = ["cancel", "stop", "exit", "leave it", "never mind", "no thanks"]
+                    if any(keyword in req.query.lower() for keyword in cancel_keywords):
+                        return "Meeting scheduling has been canceled. Let me know if you need anything else."
+                        
+                    if person_name and email and date and not time:
+                        email_list = [{"email": email}]
+                        date = convert_datetime_to_yyyy_mm_dd(date)
+                        free_slots = get_free_slots(email_list, date)
+
+                        if free_slots:
+                            return "Thanks for all the details {person_name.get('name')}. Our team is available for a meeting from {free_slots[0]['start']} to {free_slots[0]['end']}." + fulfillment_text,
+                            
+                        else:
+                            return "No available time slots on {date}. Please provide another date."
+
+                    elif person_name and email and date and time:
+                        email_list = [{"email": email}]
+                        date = convert_datetime_to_yyyy_mm_dd(date)
+                        print(time)
+                        time = convert_to_hh_mm(time)
+                        print(time)
+                        meeting_link = create_event(email_list, date, time)
+                        print(meeting_link)
+                        if meeting_link:
+                            send_email_with_template(email, meeting_link)
+                            return "Meeting successfully scheduled for {person_name.get('name')} on {date} at {time}. You will receive a confirmation email shortly.",   
+                        else:
+                            return "There was an issue scheduling the meeting. Please try again later."
+
+
+                    return fulfillment_text
+
+                except Exception as e:
+                    print(e)
+                    raise HTTPException(status_code=500, detail=str(e)) 
+
         
         rag_chain = prompt | llm | StrOutputParser()
         agent = create_tool_calling_agent(llm, tools, prompt)

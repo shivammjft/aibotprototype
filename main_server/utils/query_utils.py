@@ -12,8 +12,6 @@ from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from typing import Annotated
 import logging
-from langchain.pydantic_v1 import BaseModel, Field
-from langchain.tools import BaseTool, StructuredTool, tool
 from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -99,7 +97,7 @@ def context_retriever(query,session_id,company_id,chatbot_id,db,collection_name,
     """
 
     try:
-        vectorstore = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=collection_name, url='http://qdrant:6333')
+        vectorstore = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=collection_name, url='http://64.227.160.209:6333')
         manual_filter={
         "must": [
                 {

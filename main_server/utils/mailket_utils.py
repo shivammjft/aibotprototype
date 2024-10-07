@@ -1,5 +1,4 @@
 from mailjet_rest import Client
-from dotenv import load_dotenv
 import os
 from jinja2 import Template
 import logging
