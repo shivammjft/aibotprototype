@@ -24,8 +24,8 @@ INPUT_TOKEN_RATE = 0.35 / 1_000_000
 OUTPUT_TOKEN_RATE = 0.40 / 1_000_000
 
 def company_to_dict(company, total_queries) -> Dict:
-    input_token_cost = company.input_tokens * INPUT_TOKEN_RATE
-    output_token_cost = company.output_tokens * OUTPUT_TOKEN_RATE
+    input_token_cost = float(company.input_tokens * INPUT_TOKEN_RATE)  
+    output_token_cost = float(company.output_tokens * OUTPUT_TOKEN_RATE) 
 
     return {
         "id": company.id,
@@ -40,6 +40,7 @@ def company_to_dict(company, total_queries) -> Dict:
         "output_token_cost": output_token_cost,
         "total_queries": total_queries 
     }
+
 
 def get_db():
     db = SessionLocal()
