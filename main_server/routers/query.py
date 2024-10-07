@@ -41,7 +41,7 @@ db_dependency = Annotated[Session, Depends(get_db)]
 MEETING_KEYWORDS = [
     "meeting", "schedule", "appointment", "book", "plan",
     "arrange", "set up", "organize", "conference", "session",
-    "discussion", "call", "touch base", "catch up", "coordinate"
+    "discussion", "call", "touch base", "catch up", "coordinate", "Ok", "Yeah", "Yes", "Sure"
 ]
 
 def contains_meeting_keyword(query: str) -> bool:
