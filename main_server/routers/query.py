@@ -11,9 +11,8 @@ from models.tables import Company, Queries, Chatbot_stats
 from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from typing import Annotated
-from langchain.agents import AgentExecutor, create_tool_calling_agent
 from datetime import datetime
-from utils.query_utils import count_tokens,meeting_finder
+from utils.query_utils import count_tokens
 import logging
 import traceback
 from constants.email import bot_chat_template
@@ -61,21 +60,21 @@ def check_meeting_intent(query: str, context: str) -> str:
     formatted_prompt = prompt.format(query=query, context=context)  
     try:
         response = llm.invoke(formatted_prompt)  
-        return response.strip().lower()
+        return response.content.lower().strip()
     except Exception as e:
         logger.error("LLM Error: %s", str(e))
         return "no"
     
-def concatenate_context(context: Optional[List[str]]) -> str:
+def concatenate_context(context: Optional[List[str]], query: str) -> str:
     if context is None:
         return ""
-    
     formatted_strings = []
     for i, statement in enumerate(context):
         if i % 2 == 0:  
             formatted_strings.append(f"User: {statement.strip()}")
         else:  
             formatted_strings.append(f"Bot: {statement.strip()}")
+    formatted_strings.append(f"User: {query}")
     return "\n".join(formatted_strings)
 
 DIALOGFLOW_PROJECT_ID = "chatbot-meeting-scheduler"
@@ -117,11 +116,15 @@ def convert_to_hh_mm(timestamp: str) -> str:
     dt = datetime.fromisoformat(timestamp)
     return dt.strftime("%H:%M")
 
+CHECK_KEYS = ["Meeting successfully scheduled for", "There was an issue scheduling the meeting. Please try again later.", "Meeting scheduling has been canceled. Let me know if you need anything else."]
 
-def check_phrase_in_last_string(context, phrase):
-    if isinstance(context, str) and isinstance(phrase, str):
-        return phrase in context
-    return False
+def contains_check_keyword(context: str, phrases: list) -> bool:
+    if not isinstance(context, str):
+        raise ValueError("The context must be a string.")
+    if not isinstance(phrases, list):
+        raise ValueError("The phrases must be a list of strings.")
+    return any(phrase in context for phrase in phrases)
+
 
 
 @router.post("/query")
@@ -142,39 +145,19 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
             raise HTTPException(status_code=400, detail="Missing Origin Header")
 
         chatbot_stats = db.query(Chatbot_stats).filter(Chatbot_stats.chatbot_id == req.chatbot_id).first()
+
         if not chatbot_stats:
             logger.error("Chatbot not found: %s", req.chatbot_id)
             raise HTTPException(status_code=404, detail="Chatbot not found")
-
-        logger.info("Prompt tmeplate: Type %s", type(chatbot_stats.chatbot_prompt))
-
-        promt_template = chatbot_stats.chatbot_prompt
-
-        logger.info("Prompt tmeplate: %s", promt_template)
-
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", promt_template),
-                MessagesPlaceholder(variable_name="history"),
-                ("human", "{input}"),
-            ]
-        )
-
-
+        
         if chatbot_stats.origin_url is None:
             logger.error("Chatbot origin URL is None")
             raise HTTPException(status_code=500, detail="Chatbot origin URL is None")
-
-        logger.info("Chatbot Origin URL: %s", chatbot_stats.origin_url)
-        logger.info("Request Origin URL: %s", origin_url)
-
-        if chatbot_stats.origin_url.strip() != origin_url.strip():
-            logger.warning("Unauthorized Domain: %s", origin_url)
-            raise HTTPException(status_code=401, detail="Unauthorized Domain")
         
-        if contains_meeting_keyword(req.query) or check_phrase_in_last_string(req.context, "thanks for all the details"):
+        if contains_meeting_keyword(concatenate_context(req.context, req.query)) and not contains_check_keyword(concatenate_context(req.context, req.query), CHECK_KEYS):
+            logger.info(not contains_check_keyword(concatenate_context(req.context, req.query), CHECK_KEYS))
             logger.info("Meeting-related keyword detected in query.")
-            intent = check_meeting_intent(req.query, concatenate_context(req.context))
+            intent = check_meeting_intent(req.query, concatenate_context(req.context, req.query))
             logger.info("Meeting intent determined by LLM: %s", intent)
             if intent == 'yes':
                 try: 
@@ -218,10 +201,10 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
                         free_slots = get_free_slots(email_list, date)
 
                         if free_slots:
-                            return "Thanks for all the details {person_name.get('name')}. Our team is available for a meeting from {free_slots[0]['start']} to {free_slots[0]['end']}." + fulfillment_text,
+                            return f"Thanks for all the details {person_name.get('name')}. Our team is available for a meeting from {free_slots[0]['start']} to {free_slots[0]['end']}." + fulfillment_text,
                             
                         else:
-                            return "No available time slots on {date}. Please provide another date."
+                            return f"No available time slots on {date}. Please provide another date."
 
                     elif person_name and email and date and time:
                         email_list = [{"email": email}]
@@ -233,7 +216,7 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
                         print(meeting_link)
                         if meeting_link:
                             send_email_with_template(email, meeting_link)
-                            return "Meeting successfully scheduled for {person_name.get('name')} on {date} at {time}. You will receive a confirmation email shortly.",   
+                            return f"Meeting successfully scheduled for {person_name.get('name')} on {date} at {time}. You will receive a confirmation email shortly.",   
                         else:
                             return "There was an issue scheduling the meeting. Please try again later."
 
@@ -244,10 +227,32 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
                     print(e)
                     raise HTTPException(status_code=500, detail=str(e)) 
 
+        logger.info("Prompt tmeplate: Type %s", type(chatbot_stats.chatbot_prompt))
+
+        promt_template = chatbot_stats.chatbot_prompt
+
+        logger.info("Prompt tmeplate: %s", promt_template)
+
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                ("system", promt_template),
+                MessagesPlaceholder(variable_name="history"),
+                ("human", "{input}"),
+            ]
+        )
+
+
+
+        logger.info("Chatbot Origin URL: %s", chatbot_stats.origin_url)
+        logger.info("Request Origin URL: %s", origin_url)
+
+        if chatbot_stats.origin_url.strip() != origin_url.strip():
+            logger.warning("Unauthorized Domain: %s", origin_url)
+            raise HTTPException(status_code=401, detail="Unauthorized Domain")
+        
+
         
         rag_chain = prompt | llm | StrOutputParser()
-        agent = create_tool_calling_agent(llm, tools, prompt)
-        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
         with_message_history = RunnableWithMessageHistory(
             rag_chain,
@@ -255,21 +260,6 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
             input_messages_key="input",
             history_messages_key="history",
         )
-
-
-        with_message_history_and_agent = RunnableWithMessageHistory(
-            agent_executor,
-            get_message_history,
-            input_messages_key="input",
-            history_messages_key="history",
-        )
-
-        final_response = with_message_history
-        for i in meeting_finder:
-            if i in req.query.lower():
-                final_chain = with_message_history_and_agent
-        final_response = with_message_history
-
         
         final_response = await with_message_history.ainvoke(
             {
@@ -315,7 +305,7 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
         chatbot_stats.total_input_tokens += input_token
         chatbot_stats.total_output_tokens += output_token
         chatbot_stats.total_queries += 1
-        chatbot_stats.last_query_time = datetime.datetime.now()
+        chatbot_stats.last_query_time = datetime.now()
 
    
         company = db.query(Company).filter(Company.id == user.id).first()
