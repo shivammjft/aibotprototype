@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 INPUT_TOKEN_RATE = 0.35 / 1_000_000
 OUTPUT_TOKEN_RATE = 0.40 / 1_000_000
 
-def company_to_dict(company) -> Dict:
+def company_to_dict(company, total_queries) -> Dict:
     input_token_cost = company.input_tokens * INPUT_TOKEN_RATE
     output_token_cost = company.output_tokens * OUTPUT_TOKEN_RATE
 
@@ -37,7 +37,8 @@ def company_to_dict(company) -> Dict:
         "email": company.email,
         "output_tokens": company.output_tokens,
         "input_token_cost": input_token_cost,
-        "output_token_cost": output_token_cost
+        "output_token_cost": output_token_cost,
+        "total_queries": total_queries 
     }
 
 def get_db():
