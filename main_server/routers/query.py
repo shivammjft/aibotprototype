@@ -11,15 +11,12 @@ from models.tables import Company, Queries, Chatbot_stats
 from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from typing import Annotated
-from langchain.agents import AgentExecutor, create_tool_calling_agent
 import datetime
-from langchain_core.runnables import RunnableLambda
 from utils.query_utils import count_tokens,meeting_finder
 import logging
 import traceback
 from constants.email import bot_chat_template
 from utils.mailket_utils import send_email_with_template
-from langchain_core.runnables import RunnableBranch
 router = APIRouter(tags=['query'])
 
 tools=[]
@@ -87,8 +84,6 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
             raise HTTPException(status_code=401, detail="Unauthorized Domain")
         
         rag_chain = prompt | llm | StrOutputParser()
-        agent = create_tool_calling_agent(llm, tools, prompt)
-        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
         with_message_history = RunnableWithMessageHistory(
             rag_chain,
@@ -96,21 +91,6 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
             input_messages_key="input",
             history_messages_key="history",
         )
-
-
-        with_message_history_and_agent = RunnableWithMessageHistory(
-            agent_executor,
-            get_message_history,
-            input_messages_key="input",
-            history_messages_key="history",
-        )
-
-        final_response = with_message_history
-        for i in meeting_finder:
-            if i in req.query.lower():
-                final_chain = with_message_history_and_agent
-        final_response = with_message_history
-
         
         final_response = await with_message_history.ainvoke(
             {
