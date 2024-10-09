@@ -12,11 +12,14 @@ from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from typing import Annotated
 import logging
+from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-llm = ChatOpenAI(api_key=os.getenv("DEEP_INFRA_API_KEY"), model="meta-llama/Meta-Llama-3-70B-Instruct", base_url="https://api.deepinfra.com/v1/openai")
+
+llm = ChatGroq(api_key=os.getenv("GROQ_API_KEY"), model_name="llama3-70b-8192")
+#llm = ChatOpenAI(api_key=os.getenv("DEEP_INFRA_API_KEY"), model="meta-llama/Meta-Llama-3-70B-Instruct", base_url="https://api.deepinfra.com/v1/openai")
 
 embeddings = OpenAIEmbeddings()
 
@@ -108,11 +111,11 @@ def context_retriever(query,session_id,company_id,chatbot_id,db,collection_name,
                 }
             ]
         }
-        crawled_docs = vectorstore.similarity_search(query, k=2)
-        manual_docs = vectorstore.similarity_search(query, k=2, filter=manual_filter)
-        if not manual_docs:
-            manual_docs = []
-        docs = manual_docs + crawled_docs 
+        crawled_docs = vectorstore.similarity_search(query, k=1)
+        #manual_docs = vectorstore.similarity_search(query, k=2, filter=manual_filter)
+        # if not manual_docs:
+        #     manual_docs = []
+        docs = crawled_docs #+ manual_docs
         content = ""
         if len(docs) != 0:
             for i in range(len(docs)):

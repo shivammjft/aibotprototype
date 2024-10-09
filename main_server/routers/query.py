@@ -155,7 +155,6 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
             raise HTTPException(status_code=500, detail="Chatbot origin URL is None")
         
         if contains_meeting_keyword(concatenate_context(req.context, req.query)) and not contains_check_keyword(concatenate_context(req.context, req.query), CHECK_KEYS):
-            logger.info(not contains_check_keyword(concatenate_context(req.context, req.query), CHECK_KEYS))
             logger.info("Meeting-related keyword detected in query.")
             intent = check_meeting_intent(req.query, concatenate_context(req.context, req.query))
             logger.info("Meeting intent determined by LLM: %s", intent)
