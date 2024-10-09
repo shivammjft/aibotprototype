@@ -15,10 +15,12 @@ import logging
 from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import BaseTool, StructuredTool, tool
 from dotenv import load_dotenv
+from langchain_groq import ChatGroq
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-llm = ChatOpenAI(api_key=os.getenv("DEEP_INFRA_API_KEY"), model="meta-llama/Meta-Llama-3-70B-Instruct", base_url="https://api.deepinfra.com/v1/openai")
+llm = ChatGroq(api_key=os.getenv("GROQ_API_KEY"), model="llama3-70b-8192")
+# llm = ChatOpenAI(api_key=os.getenv("DEEP_INFRA_API_KEY"), model="meta-llama/Meta-Llama-3-70B-Instruct", base_url="https://api.deepinfra.com/v1/openai")
 
 embeddings = OpenAIEmbeddings()
 
@@ -100,21 +102,21 @@ def context_retriever(query,session_id,company_id,chatbot_id,db,collection_name,
 
     try:
         vectorstore = QdrantVectorStore.from_existing_collection(embedding=embeddings, collection_name=collection_name, url='http://qdrant:6333')
-        manual_filter={
-        "must": [
-                {
-                    "key": "metadata.source",
-                    "match": {
-                        "value": "manual"
-                    }
-                }
-            ]
-        }
+        # manual_filter={
+        # "must": [
+        #         {
+        #             "key": "metadata.source",
+        #             "match": {
+        #                 "value": "manual"
+        #             }
+        #         }
+        #     ]
+        # }
         crawled_docs = vectorstore.similarity_search(query, k=2)
-        manual_docs = vectorstore.similarity_search(query, k=2, filter=manual_filter)
-        if not manual_docs:
-            manual_docs = []
-        docs = manual_docs + crawled_docs 
+        # manual_docs = vectorstore.similarity_search(query, k=2, filter=manual_filter)
+        # if not manual_docs:
+        #     manual_docs = []
+        docs = crawled_docs #+ manual_docs + 
         content = ""
         if len(docs) != 0:
             for i in range(len(docs)):
