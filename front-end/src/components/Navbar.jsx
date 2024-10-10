@@ -1,44 +1,28 @@
-import React, { useContext } from 'react';
-import ChatIcon from '../assets/ChatIcon';
+import React from 'react';
+import LogOutIcon from '../assets/icons/LogOutIcon';
 import { useNavigate } from 'react-router-dom';
-import AuthContext from '../context/AuthContext';
 
 const Navbar = () => {
-  const navigate = useNavigate();
   const token = localStorage.getItem('token');
+  const navigate = useNavigate();
 
-  const logOutHandler = () => {
+  const LogOutHandler = () => {
     localStorage.removeItem('token');
-    navigate('/')
+    navigate('/');
   };
 
   return (
-    <div className=" w-[100%] h-[5rem]  flex items-center justify-between bg-[#313A46] ">
-      <div className="flex gap-3 items-center ml-[1rem]">
-        <ChatIcon />
-        <p className="font-bold text-lg text-white">Jellyfish AI Assistant</p>
-      </div>
-      <div className="flex gap-2">
-        {token && (
-          <button
-            className="mr-[2rem] h-[3rem] w-[8rem] rounded-md border border-[#C9C9CD] text-white"
-            onClick={() => {
-              navigate('/create/company');
-            }}
-          >
-            Add Company
-          </button>
-        )}
-
-        {token && (
-          <button
-            className="mr-[2rem] h-[3rem] w-[8rem] rounded-md border border-[#C9C9CD] text-white"
-            onClick={logOutHandler}
-          >
-            Log Out
-          </button>
-        )}
-      </div>
+    <div className="h-[4rem] rounded-lg bg-[#6D62E5] p-5 font-bold flex items-center justify-between">
+      <p>Jellyfish AI Assistant</p>
+      {token && (
+        <div
+          className="text-white flex  gap-2 items-center justify-center hover:cursor-pointer"
+          onClick={LogOutHandler}
+        >
+          <LogOutIcon />
+          <button>Log Out</button>
+        </div>
+      )}
     </div>
   );
 };

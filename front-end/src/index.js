@@ -5,6 +5,14 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';
 
+
+console.error = (message) => {
+  if (message.includes('defaultProps')) {
+    return;
+  }
+  console.warn(message);
+};
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <BrowserRouter>
