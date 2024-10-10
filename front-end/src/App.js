@@ -1,48 +1,52 @@
-import logo from './logo.svg';
-import './App.css';
-import { Route, Router, Routes } from 'react-router-dom';
-import Register from './pages/Login/Register';
-import React, { useContext, useEffect, useState } from 'react';
-import Dashbaord from './pages/Dashboard/Dashbaord';
-import SuccessIcon from './lotties/SuccessIcon';
-import CompanyDetail from './pages/Company/CompanyDetail';
-import CreateCompany from './pages/Company/CreateCompany';
-import { AuthContextProvider } from './context/AuthContextProvider';
-import AuthContext from './context/AuthContext';
-import ChatBotQuery from './pages/Chatbot/ChatBotQuery';
-import Layout from './components/Layout';
-import ErrorPage from './components/ErrorPage';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import CompanyDetails from './pages/CompanyDetails';
+import AddCompany from './pages/AddCompany';
+import ErrorPage from './pages/ErrorPage';
+import LoadinsSpinner from './components/LoadinsSpinner';
+import CompanyChatBotDetails from './pages/CompanyChatBotDetails';
+import SuccessIcon from './components/SuccessIcon';
+import AddAdmin from './pages/AddAdmin';
+import { useEffect } from 'react';
 
 function App() {
-  const [logIn, setIsLoggedIn] = useState(
-    AuthContext.isLoggedIn || localStorage.getItem('token')
-  );
+  const token = localStorage.getItem('token');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (token) {
+      if (location.pathname === '/') {
+        navigate('/admin/dashboard');
+      }
+    }
+  }, [navigate]);
 
   return (
-    <AuthContextProvider>
+    <>
       <Routes>
-        <Route path="/" element={<Register type="login" />} />
+        <Route path="/" element={<Login />} />
         <Route
           path="/admin/dashboard"
-          element={<>{logIn && <Dashbaord />}</>}
-        />
-        <Route path="/success" element={<SuccessIcon />} />
-
-        <Route
-          path="/create/company"
-          element={logIn ? <CreateCompany /> : <ErrorPage />}
+          element={token ? <Dashboard /> : <ErrorPage />}
         />
         <Route
-          path="/company/details"
-          element={logIn ? <CompanyDetail /> : <ErrorPage />}
+          path="/company/details/:id"
+          element={token ? <CompanyDetails /> : <ErrorPage />}
+        />
+        <Route
+          path="/add/company"
+          element={token ? <AddCompany /> : <ErrorPage />}
         />
         <Route
           path="/chatbot/:id/queries"
-          element={logIn ? <ChatBotQuery /> : <ErrorPage />}
+          element={token ? <CompanyChatBotDetails /> : <ErrorPage />}
         />
-        <Route path="/layout" element={<Layout />} />
+        <Route path="/success" element={<SuccessIcon />} />
+        <Route path="/add/admin" element={<AddAdmin />} />
       </Routes>
-    </AuthContextProvider>
+    </>
   );
 }
 

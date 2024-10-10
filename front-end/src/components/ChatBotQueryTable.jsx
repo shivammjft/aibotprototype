@@ -170,10 +170,9 @@ export default function ChatBotQueryTable({ queries }) {
     setRows(queries);
   }, [queries]);
 
-
   return (
-    <div className="mt-[8rem]  ">
-      <Paper sx={{ height: 500, width: '100%' }}>
+    <div className="mt-[2rem] flex items-center ">
+      <Paper sx={{ height: 400, width: '74%' }}>
         <DataGrid
           rows={rows}
           columns={columns}
