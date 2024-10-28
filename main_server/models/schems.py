@@ -6,7 +6,7 @@ from datetime import datetime
 
 class RequestModel(BaseModel):
     query: str
-    context: Optional[list[str]] = None
+    context: Optional[list[dict]] = None
     session_id: str
     chatbot_id:str
 
