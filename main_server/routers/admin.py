@@ -4,9 +4,10 @@ from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from decimal import Decimal
-from typing import Annotated, Dict
+from typing import Annotated, Dict, List
 from routers.auth import get_current_user, get_current_user_with_token
-from models.tables import Chatbot_stats, Company, Queries
+from models.tables import Chatbot_stats, Company, Queries, QueryUsers
+from models.schemas import QueryUserResponse
 from pydantic import HttpUrl
 import os
 import logging
@@ -222,3 +223,32 @@ async def update_chatbot_prompt(chatbot_id: str, prompt_request: UpdatePromptReq
     except Exception as e:
         db.rollback() 
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+    
+
+
+@router.get("/chatbots/{chatbot_id}/query-users", response_model=List[QueryUserResponse], status_code=status.HTTP_200_OK)
+async def get_users_by_chatbot(chatbot_id: str, db: Session = Depends(get_db)):
+    try:
+        query_users = db.query(QueryUsers).filter(QueryUsers.Chatbot_id == chatbot_id).all()
+
+        if not query_users:
+            logger.warning("No users found for chatbot ID: %s", chatbot_id)
+            raise HTTPException(status_code=404, detail="No users found for this chatbot")
+
+        users_list = []
+        for query_user in query_users:
+            user_info = {
+                "id": query_user.id,
+                "session_id": query_user.session_id,
+                "country": query_user.country,
+                "ip_address": query_user.ip_address,
+                "origin_url": query_user.origin_url
+            }
+            users_list.append(user_info)
+
+        logger.info("Fetched %d users for chatbot ID: %s", len(users_list), chatbot_id)
+        
+        return users_list
+    except Exception as e:
+        logger.error("Error fetching users: %s", str(e))
+        raise HTTPException(status_code=500, detail="Unable to fetch users")
