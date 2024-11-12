@@ -23,7 +23,9 @@ def upgrade():
         'query_users',
         sa.Column('id', sa.Integer, primary_key=True, index=True),
         sa.Column('session_id', sa.String(255), sa.ForeignKey("queries.session_id")),
+        sa.Column('chatbot_id', sa.String(255), sa.ForeignKey("chatbots.chatbot_id")),
         sa.Column('country', sa.String(100), nullable=True, index=True),
+        sa.Column('ip_address', sa.String(100)),
         sa.Column('origin_url', sa.String(255)),
     )
 
