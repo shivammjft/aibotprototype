@@ -210,7 +210,7 @@ def add_visitor(req: AddVisitorRequest, request: Request,db:db_dependency):
     try:
         ip_address = request.client.host
         logger.info("Incoming Request: %s", req)
-        logger.info("Origin URL: %s, Session ID: %s, Country: %s","IP Address: %s" , req.origin_url, req.session_id, req.country,ip_address)
+        logger.info("Origin URL: %s, Session ID: %s,IP Address: %s" , req.origin_url, req.session_id,ip_address)
         
         new_visitor = QueryUsers(
             session_id=req.session_id,
