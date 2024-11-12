@@ -43,3 +43,4 @@ class AddVisitorRequest(BaseModel):
     origin_url: str
     session_id: str
     country: str
+    chatbot_id: str

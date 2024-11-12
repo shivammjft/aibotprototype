@@ -208,12 +208,15 @@ def send_chat_email(req: SendChat, request: Request, db: db_dependency,user: dic
 @router.post("/add-visitor/")
 def add_visitor(req: AddVisitorRequest, request: Request,db:db_dependency):
     try:
+        ip_address = request.client.host
         logger.info("Incoming Request: %s", req)
-        logger.info("Origin URL: %s, Session ID: %s, Country: %s", req.origin_url, req.session_id, req.country)
+        logger.info("Origin URL: %s, Session ID: %s, Country: %s","IP Address: %s" , req.origin_url, req.session_id, req.country,ip_address)
         
         new_visitor = QueryUsers(
             session_id=req.session_id,
+            chatbot_id=req.chatbot_id,
             country=req.country,
+            ip_address=ip_address,
             origin_url=req.origin_url
         )
 

@@ -68,6 +68,8 @@ class QueryUsers(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(String(255), ForeignKey("queries.session_id"))
+    Chatbot_id = Column(String(255), ForeignKey("chatbots.chatbot_id"))
     country = Column(String(100), nullable=True, index=True)
+    ip_address = Column(String(100))
     origin_url = Column(String(255))
 
