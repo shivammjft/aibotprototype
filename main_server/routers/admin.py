@@ -229,7 +229,7 @@ async def update_chatbot_prompt(chatbot_id: str, prompt_request: UpdatePromptReq
 @router.get("/chatbots/{chatbot_id}/query-users", response_model=List[QueryUserResponse], status_code=status.HTTP_200_OK)
 async def get_users_by_chatbot(chatbot_id: str, db: Session = Depends(get_db)):
     try:
-        query_users = db.query(QueryUsers).filter(QueryUsers.Chatbot_id == chatbot_id).all()
+        query_users = db.query(QueryUsers).filter(QueryUsers.chatbot_id == chatbot_id).all()
 
         if not query_users:
             logger.warning("No users found for chatbot ID: %s", chatbot_id)
@@ -240,9 +240,16 @@ async def get_users_by_chatbot(chatbot_id: str, db: Session = Depends(get_db)):
             user_info = {
                 "id": query_user.id,
                 "session_id": query_user.session_id,
-                "country": query_user.country,
                 "ip_address": query_user.ip_address,
-                "origin_url": query_user.origin_url
+                "origin_url": query_user.origin_url,
+                "timezone":query_user.timezone,
+            "language":query_user.language,
+            "is_mobile":query_user.is_mobile,
+            "user_agent":query_user.user_agent,
+            "platform":query_user.platform,
+            "referrer":query_user.referrer,
+            "location":query_user.location,
+            "network_type":query_user.network_type
             }
             users_list.append(user_info)
 

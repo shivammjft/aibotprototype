@@ -215,9 +215,16 @@ def add_visitor(req: AddVisitorRequest, request: Request,db:db_dependency):
         new_visitor = QueryUsers(
             session_id=req.session_id,
             chatbot_id=req.chatbot_id,
-            country=req.country,
             ip_address=ip_address,
-            origin_url=req.origin_url
+            origin_url=req.origin_url,
+            timezone=req.timezone,
+            language=req.language,
+            is_mobile=req.is_mobile,
+            user_agent=req.user_agent,
+            platform=req.platform,
+            referrer=req.referrer,
+            location=req.location,
+            network_type=req.network_type
         )
 
         db.add(new_visitor)
