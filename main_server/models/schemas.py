@@ -42,17 +42,29 @@ class SendChat(BaseModel):
 class AddVisitorRequest(BaseModel):
     origin_url: str
     session_id: str
-    country: str
     chatbot_id: str
+    timezone: Optional[str] = None  
+    language: Optional[str] = None 
+    is_mobile: Optional[bool] = None 
+    user_agent: Optional[str] = None  
+    platform: Optional[str] = None  
+    referrer: Optional[str] = None  
+    location: Optional[str] = None  
+    network_type: Optional[str] = None
+ 
 
 
 
 class QueryUserResponse(BaseModel):
     id: int
     session_id: str
-    country: str
     ip_address: str
     origin_url: str
-
-    class Config:
-        orm_mode = True
+    timezone: str
+    language: str
+    is_mobile: bool
+    user_agent: str
+    platform:str
+    referrer: str
+    location:str
+    network_type: str

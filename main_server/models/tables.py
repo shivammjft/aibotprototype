@@ -68,8 +68,15 @@ class QueryUsers(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     session_id = Column(String(255), ForeignKey("queries.session_id"))
-    Chatbot_id = Column(String(255), ForeignKey("chatbots.chatbot_id"))
-    country = Column(String(100), nullable=True, index=True)
+    chatbot_id = Column(String(255), ForeignKey("chatbots.chatbot_id"))
     ip_address = Column(String(100))
     origin_url = Column(String(255))
+    timezone = Column(String(50), nullable=True)       
+    language = Column(String(10), nullable=True)      
+    is_mobile = Column(Boolean, nullable=True)         
+    user_agent = Column(Text, nullable=True)           
+    platform = Column(String(255), nullable=True)      
+    referrer = Column(String(255), nullable=True)
+    location = Column(String(255), nullable=True)      
+    network_type = Column(String(50), nullable=True)  
 
