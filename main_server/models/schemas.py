@@ -44,3 +44,15 @@ class AddVisitorRequest(BaseModel):
     session_id: str
     country: str
     chatbot_id: str
+
+
+
+class QueryUserResponse(BaseModel):
+    id: int
+    session_id: str
+    country: str
+    ip_address: str
+    origin_url: str
+
+    class Config:
+        orm_mode = True
