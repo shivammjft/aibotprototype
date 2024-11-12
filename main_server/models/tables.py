@@ -53,12 +53,21 @@ class Queries(Base):
     id = Column(Integer,index=True,primary_key=True)
     company_id = Column(Integer, ForeignKey("companies.id"))
     chatbot_id = Column(String(255),ForeignKey("chatbots.chatbot_id"))
-    session_id = Column(String(255))
+    session_id = Column(String(255),index=True)
     query_text_bot = Column(Text)
     query_text_user = Column(Text)
     query_context = Column(Text)
     input_tokens = Column(String(255))
     output_tokens = Column(String(255))
     query_time = Column(DateTime)
+    origin_url = Column(String(255))
+
+
+class QueryUsers(Base):
+    __tablename__ = "query_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(String(255), ForeignKey("queries.session_id"))
+    country = Column(String(100), nullable=True, index=True)
     origin_url = Column(String(255))
 
