@@ -3,7 +3,7 @@ from qdrant_client import QdrantClient
 from langchain_openai import OpenAIEmbeddings
 import uuid
 from langchain_qdrant import QdrantVectorStore
-from models.schems import AddDataRequest
+from models.schemas import AddDataRequest
 from langchain_core.documents import Document
 
 router = APIRouter(prefix='/admin', tags=['Admin'])

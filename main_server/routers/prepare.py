@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from models.schems import ClientRequest
+from models.schemas import ClientRequest
 from utils.prepare_bot_utils import generate_unique_id
 from typing import Annotated
 from datetime import datetime

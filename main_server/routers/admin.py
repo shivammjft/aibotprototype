@@ -11,7 +11,7 @@ from pydantic import HttpUrl
 import os
 import logging
 
-from models.schems import UpdatePromptRequest
+from models.schemas import UpdatePromptRequest
 from sqlalchemy.exc import NoResultFound
 
 router = APIRouter(prefix='/admin', tags=['Admin'])

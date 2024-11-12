@@ -3,11 +3,11 @@ from fastapi.responses import JSONResponse
 from utils.auth import get_current_user
 from utils.query_utils import llm, get_message_history, context_retriever,escape_template_string
 from constants.prompts import user_message
-from models.schems import RequestModel ,SendChat
+from models.schemas import RequestModel ,SendChat, AddVisitorRequest
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from models.tables import Company, Queries, Chatbot_stats
+from models.tables import Company, Queries, Chatbot_stats, QueryUsers
 from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from typing import Annotated
@@ -204,3 +204,27 @@ def send_chat_email(req: SendChat, request: Request, db: db_dependency,user: dic
         db.rollback() 
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
     
+
+@router.post("/add-visitor/")
+def add_visitor(req: AddVisitorRequest, request: Request,db:db_dependency):
+    try:
+        logger.info("Incoming Request: %s", req)
+        logger.info("Origin URL: %s, Session ID: %s, Country: %s", req.origin_url, req.session_id, req.country)
+        
+        new_visitor = QueryUsers(
+            session_id=req.session_id,
+            country=req.country,
+            origin_url=req.origin_url
+        )
+
+        db.add(new_visitor)
+        db.commit()
+        
+        return {"status": "200", "message": "Visitor successfully added"}
+
+    except Exception as e:
+        # Rollback transaction if error occurs
+        logger.error("An unexpected error occurred: %s", str(e))
+        logger.error("Traceback: %s", traceback.format_exc())
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")

@@ -37,3 +37,9 @@ class SendChat(BaseModel):
     chatHistory:List
     chatbot_id:str
     session_id:str
+
+
+class AddVisitorRequest(BaseModel):
+    origin_url: str
+    session_id: str
+    country: str
