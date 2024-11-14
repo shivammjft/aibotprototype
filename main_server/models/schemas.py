@@ -62,9 +62,9 @@ class QueryUserResponse(BaseModel):
     origin_url: str
     timezone: Optional[str] = None  
     language: Optional[str] = None  
-    is_mobile: Optional[bool] = None 
-    user_agent: Optional[str] = None  
+    is_mobile: Optional[bool] = Field(None, alias="isMobile")  # Alias for isMobile
+    user_agent: Optional[str] = Field(None, alias="userAgent")  # Alias for userAgent  
     platform:Optional[str] = None  
     referrer: Optional[str] = None  
-    location:Optional[str] = None  
-    network_type: Optional[str] = None  
+    location:Optional[dict] = None  
+     network_type: Optional[str] = Field(None, alias="networkType")  # Alias for networkType
