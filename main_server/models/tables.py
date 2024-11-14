@@ -1,6 +1,6 @@
 from config.db import Base 
 from datetime import datetime
-from sqlalchemy import Integer, Column, Boolean, String , DateTime,ForeignKey,Text
+from sqlalchemy import Integer, Column, Boolean, String , DateTime,ForeignKey,Text, JSON
 from sqlalchemy.orm import relationship
 
 class Users(Base):
@@ -77,6 +77,6 @@ class QueryUsers(Base):
     user_agent = Column(Text, nullable=True)           
     platform = Column(String(255), nullable=True)      
     referrer = Column(String(255), nullable=True)
-    location = Column(String(255), nullable=True)      
+    location = Column(JSON, nullable=True)     
     network_type = Column(String(50), nullable=True)  
 

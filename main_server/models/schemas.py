@@ -1,5 +1,5 @@
 from pydantic import BaseModel,Field,EmailStr,HttpUrl
-from typing import List , Dict,Optional
+from typing import List , Dict,Optional, Any
 from datetime import datetime
 
 
@@ -45,12 +45,12 @@ class AddVisitorRequest(BaseModel):
     chatbot_id: str
     timezone: Optional[str] = None  
     language: Optional[str] = None 
-    is_mobile: Optional[bool] = None 
-    user_agent: Optional[str] = None  
+    is_mobile: Optional[bool] = Field(None, alias="isMobile") 
+    user_agent: Optional[str] = Field(None, alias="userAgent")  
     platform: Optional[str] = None  
     referrer: Optional[str] = None  
-    location: Optional[str] = None  
-    network_type: Optional[str] = None
+    location: Optional[Any] = None  
+    network_type: Optional[str] = Field(None, alias="networkType")  
  
 
 
@@ -62,9 +62,9 @@ class QueryUserResponse(BaseModel):
     origin_url: str
     timezone: Optional[str] = None  
     language: Optional[str] = None  
-    is_mobile: Optional[bool] = Field(None, alias="isMobile")  # Alias for isMobile
-    user_agent: Optional[str] = Field(None, alias="userAgent")  # Alias for userAgent  
+    is_mobile: Optional[bool] = None 
+    user_agent: Optional[str] = None  
     platform:Optional[str] = None  
     referrer: Optional[str] = None  
-    location:Optional[dict] = None  
-     network_type: Optional[str] = Field(None, alias="networkType")  # Alias for networkType
+    location:Optional[str] = None  
+    network_type: Optional[str] = None  
