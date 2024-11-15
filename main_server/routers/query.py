@@ -208,6 +208,10 @@ def send_chat_email(req: SendChat, request: Request, db: db_dependency,user: dic
 @router.post("/add-visitor/")
 def add_visitor(req: AddVisitorRequest, request: Request,db:db_dependency):
     try:
+        query_user = db.query(QueryUsers).filter(QueryUsers.session_id == req.session_id).first() 
+        if query_user:
+            logger.warning("Visitor with this session ID already exists: %s", req.session_id)
+            return {"detail": "Visitor with this session ID already exists."}
         ip_address = request.client.host
         logger.info("Incoming Request: %s", req)
         logger.info("Origin URL: %s, Session ID: %s,IP Address: %s" , req.origin_url, req.session_id,ip_address)

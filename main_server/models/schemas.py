@@ -66,5 +66,5 @@ class QueryUserResponse(BaseModel):
     user_agent: Optional[str] = None  
     platform:Optional[str] = None  
     referrer: Optional[str] = None  
-    location:Optional[str] = None  
+    location:Optional[Any] = None  
     network_type: Optional[str] = None  
