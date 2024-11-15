@@ -114,7 +114,11 @@ async def get_chatbots(company_id: int, db: db_dependency, user: user_dependency
         company = db.query(Company).filter(Company.id == company_id).first()
         if not company:
             logger.warning("Company not found: %d", company_id)
-            raise HTTPException(status_code=404, detail="Company not found")
+            return JSONResponse(content={
+                "status": status.HTTP_200_OK,
+                "data": [],
+                "message": "No company found with the given ID"
+            })
 
         chatbots = db.query(Chatbot_stats).filter(Chatbot_stats.company_id == company_id).all()
         chatbots_list = []
@@ -155,7 +159,11 @@ async def get_queries_by_chatbot(chatbot_id: str, db: db_dependency, user: user_
         
         if not queries:
             logger.warning("No queries found for chatbot ID: %s", chatbot_id)
-            raise HTTPException(status_code=404, detail="No queries found for this chatbot")
+            # Instead of raising JSONResponse, return it
+            return JSONResponse(content={
+                "status": status.HTTP_200_OK,
+                "data": []
+            })
 
         queries_list = []
         for query in queries:
@@ -182,6 +190,7 @@ async def get_queries_by_chatbot(chatbot_id: str, db: db_dependency, user: user_
     except Exception as e:
         logger.error("Error fetching queries: %s", str(e))
         raise HTTPException(status_code=500, detail="Unable to fetch queries")
+
 
 @router.post("/upload/")
 async def upload_files(company_name: str, base_url: HttpUrl, files: list[UploadFile] = File(...)):
@@ -233,8 +242,11 @@ async def get_users_by_chatbot(chatbot_id: str, db: Session = Depends(get_db)):
 
         if not query_users:
             logger.warning("No users found for chatbot ID: %s", chatbot_id)
-            raise HTTPException(status_code=404, detail="No users found for this chatbot")
-
+            return JSONResponse(content={
+                "status": status.HTTP_200_OK,
+                "data": [],
+                "message": "No users found for this chatbot"
+            })
         users_list = []
         for query_user in query_users:
             user_info = {
