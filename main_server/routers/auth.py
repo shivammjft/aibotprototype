@@ -11,12 +11,15 @@ from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 import logging
+from models.tables import Company
+import json
 
 router = APIRouter(prefix='/auth', tags=['Auth'])
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 crypt = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/login')
@@ -170,4 +173,14 @@ async def login(form_data: LoginUserData, db: db_dependency):
     user = authenticate_user(form_data.username, form_data.password, db)
     token = create_access_token(user.username, user.id, user.role, timedelta(days=30))
     logger.info("User logged in successfully: %s", user.username)
-    return JSONResponse(content={"access_token": token, 'token_type': 'bearer'})
+    if  user.role =='admin':
+        return JSONResponse(content={"access_token": token, 'token_type': 'bearer','role':user.role})
+    else:
+        company = db.query(Company).filter(Company.email == user.email).first()
+        company_json = {
+            "email": company.email,
+            "company_name": company.company_name,
+            "base_url": company.base_url,
+            "company_id": company.company_key
+        }
+        return JSONResponse(content={"access_token": token, 'token_type': 'bearer','role':user.role,'company_data':company_json})
