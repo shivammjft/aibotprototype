@@ -8,12 +8,25 @@ from typing import Annotated, Dict, List
 from routers.auth import get_current_user, get_current_user_with_token
 from models.tables import Chatbot_stats, Company, Queries, QueryUsers
 from models.schemas import QueryUserResponse
-from pydantic import HttpUrl
+from pydantic import HttpUrl, BaseModel
 import os
 import logging
-
+import pymupdf4llm
+import pathlib
 from models.schemas import UpdatePromptRequest
 from sqlalchemy.exc import NoResultFound
+from langchain_openai import OpenAIEmbeddings
+from langchain_qdrant import QdrantVectorStore
+from qdrant_client.models import Distance, VectorParams
+from qdrant_client import QdrantClient
+from uuid import uuid4
+import asyncio
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+import time
+from langchain_core.documents import Document
+
+
+
 
 router = APIRouter(prefix='/admin', tags=['Admin'])
 
@@ -23,6 +36,11 @@ logger = logging.getLogger(__name__)
 
 INPUT_TOKEN_RATE = 0.35 / 1_000_000
 OUTPUT_TOKEN_RATE = 0.40 / 1_000_000
+
+class UploadRequest(BaseModel):
+    company_name: str
+    base_url: HttpUrl
+    files: List[UploadFile] = File(...)
 
 def company_to_dict(company, total_queries) -> Dict:
     input_token_cost = float(company.input_tokens * INPUT_TOKEN_RATE)  
@@ -42,6 +60,32 @@ def company_to_dict(company, total_queries) -> Dict:
         "total_queries": float(total_queries) 
     }
 
+def chunk_text(text, chunk_size=600, chunk_overlap=60):
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    chunks = text_splitter.split_documents([text])
+    return chunks
+
+def retry_upsert(client, collection_name, text_chunks, uuids, embeddings, retries=3):
+    
+    for attempt in range(retries):
+        try:
+            logger.info(f"Upsert attempt {attempt + 1}")
+            vector_store = QdrantVectorStore(
+                client=client,
+                collection_name=collection_name,
+                embedding=embeddings,
+            )
+            vector_store.add_documents(documents=text_chunks, ids=uuids)
+            logger.info(f"Successfully upserted {len(text_chunks)} documents.")
+            break
+        except Exception as e:
+            logger.error(f"Error during upsert attempt {attempt + 1}: {str(e)}")
+            if attempt < retries - 1:
+                logger.info(f"Retrying in {2 ** attempt} seconds...")
+                time.sleep(2 ** attempt)
+            else:
+                logger.error("Max retries reached. Failing the upsert operation.")
+                raise
 
 def get_db():
     db = SessionLocal()
@@ -190,29 +234,83 @@ async def get_queries_by_chatbot(chatbot_id: str, db: db_dependency, user: user_
     except Exception as e:
         logger.error("Error fetching queries: %s", str(e))
         raise HTTPException(status_code=500, detail="Unable to fetch queries")
+    
+
 
 
 @router.post("/upload/")
-async def upload_files(company_name: str, base_url: HttpUrl, files: list[UploadFile] = File(...)):
+async def upload_and_process_files(upload_request: UploadRequest, user: user_dependency,  files: List[UploadFile] = File(...)):
+    folder_name = f"{upload_request.company_name}-{upload_request.base_url}"
+    dir_path = os.path.join("uploads", folder_name)
+    os.makedirs(dir_path, exist_ok=True)
+
+    processed_files = []
     try:
-        folder_name = f"{company_name}-{base_url}"
-        dir_path = os.path.join("uploads", folder_name)
-        
-        os.makedirs(dir_path, exist_ok=True)
-
-        file_paths = []
         for file in files:
-            file_path = os.path.join(dir_path, file.filename)
-            with open(file_path, "wb") as buffer:
-                buffer.write(await file.read())
-            file_paths.append(file_path)
+            temp_file_path = os.path.join(dir_path, file.filename)
 
-        logger.info("Uploaded %d files to %s", len(file_paths), dir_path)
-        
-        return JSONResponse(content={"file_paths": file_paths}, status_code=200)
+            with open(temp_file_path, "wb") as buffer:
+                buffer.write(await file.read())
+
+            logger.info(f"Processing file: {file.filename}")
+
+            with open(temp_file_path, "rb") as temp_file:
+                logger.info("Extracting markdown from the PDF")
+                pdf_text = pymupdf4llm.to_markdown(temp_file)
+                print(type(pdf_text))
+
+                document = Document(
+                    page_content=pdf_text,
+                    metadata={"source": "Documents"}
+                )
+            print(type(document))
+            logger.info("Chunking data for processing")
+            print()
+            text_chunks = chunk_text(document)
+
+            logger.info(f"Total text chunks generated: {len(text_chunks)}")
+
+            embeddings = OpenAIEmbeddings()
+            client = QdrantClient(url="http://qdrant:6333", timeout=18000)
+
+            collection_name = user.company_key
+
+            # Ensure collection exists
+            if not client.collection_exists(collection_name):
+                logger.info(f"Collection '{collection_name}' does not exist. Creating it.")
+                client.create_collection(
+                    collection_name=collection_name,
+                    vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
+                )
+
+            # Batch store chunks
+            logger.info("Storing text chunks in Qdrant")
+            batch_size = 100
+            for i in range(0, len(text_chunks), batch_size):
+                batch_chunks = text_chunks[i : i + batch_size]
+                batch_uuids = [str(uuid4()) for _ in range(len(batch_chunks))]
+                logger.info(f"Storing batch {i // batch_size + 1}/{(len(text_chunks) // batch_size) + 1}")
+                retry_upsert(client, collection_name, batch_chunks, batch_uuids, embeddings)
+
+            logger.info(f"File {file.filename} processed successfully.")
+            processed_files.append(file.filename)
+
+            os.remove(temp_file_path)
+
+        if not os.listdir(dir_path):
+            os.rmdir(dir_path)
+
+        return JSONResponse(
+            content={"processed_files": processed_files}, status_code=200
+        )
+
     except Exception as e:
-        logger.error("Error uploading files: %s", str(e))
-        raise HTTPException(status_code=500, detail="Error uploading files")
+        logger.error(f"Error processing files: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error processing files")
+
+    finally:
+        if os.path.exists(dir_path) and not os.listdir(dir_path):
+            os.rmdir(dir_path)
 
 
 @router.put("/chatbot/{chatbot_id}/prompt")
