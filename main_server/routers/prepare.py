@@ -12,10 +12,43 @@ import logging
 import os
 from dotenv import load_dotenv
 from constants.prompts import user_message
+from fastapi import APIRouter, Depends, status, HTTPException, File, UploadFile, Form
+from fastapi.responses import JSONResponse
+from config.db import SessionLocal
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+from decimal import Decimal
+from typing import Annotated, Dict, List
+from routers.auth import get_current_user, get_current_user_with_token
+from models.tables import Chatbot_stats, Company, Queries, QueryUsers,Users
+from models.schemas import QueryUserResponse
+from pydantic import HttpUrl, BaseModel, Field, EmailStr
+import os
+import logging
+import pymupdf4llm
+import pathlib
+from models.schemas import UpdatePromptRequest
+from sqlalchemy.exc import NoResultFound
+from langchain_openai import OpenAIEmbeddings
+from langchain_qdrant import QdrantVectorStore
+from qdrant_client.models import Distance, VectorParams
+from qdrant_client import QdrantClient
+from uuid import uuid4
+import asyncio
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+import time
+from langchain_core.documents import Document
+from typing import Optional, List, Dict, Any
+
 
 load_dotenv()
 
 router = APIRouter(tags=['prepare'])
+
+def chunk_text(text, chunk_size=600, chunk_overlap=60):
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    chunks = text_splitter.split_documents([text])
+    return chunks
 
 
 logging.basicConfig(level=logging.INFO)
@@ -30,24 +63,67 @@ def get_db():
 
 db_dependency = Annotated[Session, Depends(get_db)]
 
-@router.post("/init_company/")
-def add_company(req: ClientRequest, db: db_dependency):
-    try:
-        logger.info("Received request to add company: %s", req)
+def retry_upsert(client, collection_name, text_chunks, uuids, embeddings, retries=3):
+    
+    for attempt in range(retries):
+        try:
+            logger.info(f"Upsert attempt {attempt + 1}")
+            vector_store = QdrantVectorStore(
+                client=client,
+                collection_name=collection_name,
+                embedding=embeddings,
+            )
+            vector_store.add_documents(documents=text_chunks, ids=uuids)
+            logger.info(f"Successfully upserted {len(text_chunks)} documents.")
+            break
+        except Exception as e:
+            logger.error(f"Error during upsert attempt {attempt + 1}: {str(e)}")
+            if attempt < retries - 1:
+                logger.info(f"Retrying in {2 ** attempt} seconds...")
+                time.sleep(2 ** attempt)
+            else:
+                logger.error("Max retries reached. Failing the upsert operation.")
+                raise
 
-        company = db.query(Company).filter(Company.email == req.email).first()
+def validate_base_url_or_files(
+    base_url: Optional[HttpUrl] = None,
+    files: Optional[List[UploadFile]] = None
+):
+    """
+    Validation function to ensure at least one of base_url or files is provided.
+    """
+    if not base_url and not files:
+        raise HTTPException(
+            status_code=400,
+            detail="Either 'base_url' or 'files' must be provided."
+        )
+    
+
+
+@router.post("/init_company/")
+async def add_company(db: db_dependency, 
+                company_name : str = Form(...),
+                chatbot_name: str =  Form(...),
+                email:str = Form(...),
+                deployment_url:Optional[HttpUrl] = Form(...),
+                base_url : Optional[HttpUrl] = Form(None),
+                files: List[UploadFile] = File(...)):
+    try:
+        logger.info("Received request to add company: %s")
+
+        company = db.query(Company).filter(Company.email == email).first()
         if company:
-            logger.warning("Company with this email already exists: %s", req.email)
+            logger.warning("Company with this email already exists: %s", email)
             return {"detail": "Company with this email already exists."}
 
         company_key_id = generate_unique_id()
         create_company_model = Company(
             company_key=company_key_id,
-            base_url=req.base_url,
-            email=req.email,
+            base_url=base_url,
+            email=email,
             input_tokens=0,
             output_tokens=0,
-            company_name=req.company_name,
+            company_name=company_name,
             created_date=datetime.now()
         )
 
@@ -59,11 +135,11 @@ def add_company(req: ClientRequest, db: db_dependency):
         chatbot_id = generate_unique_id()
         create_chatbot_model = Chatbot_stats(
             chatbot_id=chatbot_id,
-            chatbot_name=req.chatbot_name,
+            chatbot_name=chatbot_name,
             chatbot_prompt=user_message,
             company_id=company_id,
-            origin_url=req.deployment_url,
-            company_name=req.company_name,
+            origin_url=deployment_url,
+            company_name=company_name,
             total_input_tokens=0,
             total_output_tokens=0,
             total_queries=0,
@@ -71,6 +147,67 @@ def add_company(req: ClientRequest, db: db_dependency):
         )
     
         db.add(create_chatbot_model)
+
+        folder_name = f"{company_name}-{company_key_id}"
+        dir_path = os.path.join("uploads", folder_name)
+        os.makedirs(dir_path, exist_ok=True)
+
+        if files:
+            processed_files = []
+            for file in files:
+                temp_file_path = os.path.join(dir_path, file.filename)
+
+                with open(temp_file_path, "wb") as buffer:
+                    buffer.write(await file.read()) 
+
+                logger.info(f"Processing file: {file.filename}")
+
+                with open(temp_file_path, "rb") as temp_file:
+                    logger.info("Extracting markdown from the PDF")
+                    pdf_text = pymupdf4llm.to_markdown(temp_file)
+
+                    document = Document(
+                        page_content=pdf_text,
+                        metadata={"source": "Documents"}
+                    )
+                logger.info("Chunking data for processing")
+                text_chunks = chunk_text(document)
+
+                logger.info(f"Total text chunks generated: {len(text_chunks)}")
+
+                embeddings = OpenAIEmbeddings()
+                client = QdrantClient(url="http://localhost:6333", timeout=18000)
+                logger.info("Client Initialized")
+
+                collection_name = company_key_id
+                logger.info(f"Collection Name: {collection_name}")
+                if not client.collection_exists(collection_name):
+                    print("hi")
+                    logger.info(f"Collection '{collection_name}' does not exist. Creating it.")
+                    client.create_collection(
+                        collection_name=collection_name,
+                        vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
+                    )
+
+                # Batch store chunks
+                logger.info("Storing text chunks in Qdrant")
+                batch_size = 100
+                for i in range(0, len(text_chunks), batch_size):
+                    batch_chunks = text_chunks[i : i + batch_size]
+                    batch_uuids = [str(uuid4()) for _ in range(len(batch_chunks))]
+                    logger.info(f"Storing batch {i // batch_size + 1}/{(len(text_chunks) // batch_size) + 1}")
+                    retry_upsert(client, collection_name, batch_chunks, batch_uuids, embeddings)
+
+                logger.info(f"File {file.filename} processed successfully.")
+                processed_files.append(file.filename)
+
+                os.remove(temp_file_path)
+
+            if not os.listdir(dir_path):
+                os.rmdir(dir_path)
+
+            if os.path.exists(dir_path) and not os.listdir(dir_path):
+                os.rmdir(dir_path)       
 
         message_body = {
             "company_key": company_key_id,

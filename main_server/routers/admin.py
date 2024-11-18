@@ -37,10 +37,6 @@ logger = logging.getLogger(__name__)
 INPUT_TOKEN_RATE = 0.35 / 1_000_000
 OUTPUT_TOKEN_RATE = 0.40 / 1_000_000
 
-class UploadRequest(BaseModel):
-    company_name: str = Form(...)
-    base_url: HttpUrl = Form(...)
-
 def company_to_dict(company, total_queries) -> Dict:
     input_token_cost = float(company.input_tokens * INPUT_TOKEN_RATE)  
     output_token_cost = float(company.output_tokens * OUTPUT_TOKEN_RATE) 

@@ -17,10 +17,12 @@ class Company(BaseModel):
 
 class ClientRequest(BaseModel):
     company_name : str = Field(min_length=3, max_length=100)
-    base_url : HttpUrl
+    base_url : Optional[HttpUrl]
     email:str =EmailStr
     deployment_url:Optional[HttpUrl]  
     chatbot_name: str = Field(min_length=1, max_length=100)
+
+
 
 class AddDataRequest(BaseModel):
     text: str           
