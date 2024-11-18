@@ -239,14 +239,14 @@ async def get_queries_by_chatbot(chatbot_id: str, db: db_dependency, user: user_
 
 
 @router.post("/upload/")
-async def upload_and_process_files(upload_request: UploadRequest, user: user_dependency,  files: List[UploadFile] = File(...)):
+async def upload_and_process_files(upload_request: UploadRequest, user: user_dependency):
     folder_name = f"{upload_request.company_name}-{upload_request.base_url}"
     dir_path = os.path.join("uploads", folder_name)
     os.makedirs(dir_path, exist_ok=True)
 
     processed_files = []
     try:
-        for file in files:
+        for file in upload_request.files:
             temp_file_path = os.path.join(dir_path, file.filename)
 
             with open(temp_file_path, "wb") as buffer:
