@@ -8,7 +8,7 @@ from typing import Annotated, Dict, List
 from routers.auth import get_current_user, get_current_user_with_token
 from models.tables import Chatbot_stats, Company, Queries, QueryUsers
 from models.schemas import QueryUserResponse
-from pydantic import HttpUrl
+from pydantic import HttpUrl, BaseModel
 import os
 import logging
 import pymupdf4llm
@@ -36,6 +36,11 @@ logger = logging.getLogger(__name__)
 
 INPUT_TOKEN_RATE = 0.35 / 1_000_000
 OUTPUT_TOKEN_RATE = 0.40 / 1_000_000
+
+class UploadRequest(BaseModel):
+    company_name: str
+    base_url: HttpUrl
+    files: List[UploadFile] = File(...)
 
 def company_to_dict(company, total_queries) -> Dict:
     input_token_cost = float(company.input_tokens * INPUT_TOKEN_RATE)  
@@ -225,8 +230,8 @@ async def get_queries_by_chatbot(chatbot_id: str, db: db_dependency, user: user_
 
 
 @router.post("/upload/")
-async def upload_and_process_files(company_name: str, base_url: HttpUrl, user: user_dependency,  files: List[UploadFile] = File(...)):
-    folder_name = f"{company_name}-{base_url}"
+async def upload_and_process_files(upload_request: UploadRequest, user: user_dependency,  files: List[UploadFile] = File(...)):
+    folder_name = f"{upload_request.company_name}-{upload_request.base_url}"
     dir_path = os.path.join("uploads", folder_name)
     os.makedirs(dir_path, exist_ok=True)
 
