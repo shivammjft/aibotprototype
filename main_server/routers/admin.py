@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, HTTPException, File, UploadFile
+from fastapi import APIRouter, Depends, status, HTTPException, File, UploadFile, Form
 from fastapi.responses import JSONResponse
 from config.db import SessionLocal
 from sqlalchemy.orm import Session
@@ -6,7 +6,7 @@ from sqlalchemy import func
 from decimal import Decimal
 from typing import Annotated, Dict, List
 from routers.auth import get_current_user, get_current_user_with_token
-from models.tables import Chatbot_stats, Company, Queries, QueryUsers
+from models.tables import Chatbot_stats, Company, Queries, QueryUsers,Users
 from models.schemas import QueryUserResponse
 from pydantic import HttpUrl, BaseModel
 import os
@@ -38,9 +38,8 @@ INPUT_TOKEN_RATE = 0.35 / 1_000_000
 OUTPUT_TOKEN_RATE = 0.40 / 1_000_000
 
 class UploadRequest(BaseModel):
-    company_name: str
-    base_url: HttpUrl
-    files: List[UploadFile] = File(...)
+    company_name: str = Form(...)
+    base_url: HttpUrl = Form(...)
 
 def company_to_dict(company, total_queries) -> Dict:
     input_token_cost = float(company.input_tokens * INPUT_TOKEN_RATE)  
@@ -158,11 +157,7 @@ async def get_chatbots(company_id: int, db: db_dependency, user: user_dependency
         company = db.query(Company).filter(Company.id == company_id).first()
         if not company:
             logger.warning("Company not found: %d", company_id)
-            return JSONResponse(content={
-                "status": status.HTTP_200_OK,
-                "data": [],
-                "message": "No company found with the given ID"
-            })
+            raise HTTPException(status_code=404, detail="Company not found")
 
         chatbots = db.query(Chatbot_stats).filter(Chatbot_stats.company_id == company_id).all()
         chatbots_list = []
@@ -203,11 +198,7 @@ async def get_queries_by_chatbot(chatbot_id: str, db: db_dependency, user: user_
         
         if not queries:
             logger.warning("No queries found for chatbot ID: %s", chatbot_id)
-            # Instead of raising JSONResponse, return it
-            return JSONResponse(content={
-                "status": status.HTTP_200_OK,
-                "data": []
-            })
+            raise HTTPException(status_code=404, detail="No queries found for this chatbot")
 
         queries_list = []
         for query in queries:
@@ -237,51 +228,54 @@ async def get_queries_by_chatbot(chatbot_id: str, db: db_dependency, user: user_
     
 
 
-
 @router.post("/upload/")
-async def upload_and_process_files(upload_request: UploadRequest, user: user_dependency):
-    folder_name = f"{upload_request.company_name}-{upload_request.base_url}"
+async def upload_and_process_files(user: user_dependency, db:db_dependency, files: List[UploadFile] = File(...)):
+    print(user)
+    userdb = db.query(Users).filter(Users.username == user["username"]).first()
+    company = db.query(Company).filter(Company.email == userdb.email).first()
+
+    print(user.get("email"))
+    folder_name = f"{company.company_name}-{company.company_key}"
     dir_path = os.path.join("uploads", folder_name)
     os.makedirs(dir_path, exist_ok=True)
 
     processed_files = []
     try:
-        for file in upload_request.files:
+        for file in files:
             temp_file_path = os.path.join(dir_path, file.filename)
 
             with open(temp_file_path, "wb") as buffer:
-                buffer.write(await file.read())
+                buffer.write(await file.read()) 
 
             logger.info(f"Processing file: {file.filename}")
 
             with open(temp_file_path, "rb") as temp_file:
                 logger.info("Extracting markdown from the PDF")
                 pdf_text = pymupdf4llm.to_markdown(temp_file)
-                print(type(pdf_text))
 
                 document = Document(
                     page_content=pdf_text,
                     metadata={"source": "Documents"}
                 )
-            print(type(document))
             logger.info("Chunking data for processing")
-            print()
             text_chunks = chunk_text(document)
 
             logger.info(f"Total text chunks generated: {len(text_chunks)}")
 
             embeddings = OpenAIEmbeddings()
-            client = QdrantClient(url="http://qdrant:6333", timeout=18000)
+            client = QdrantClient(url="http://localhost:6333", timeout=18000)
+            logger.info("Client Initialized")
 
-            collection_name = user.company_key
-
-            # Ensure collection exists
+            collection_name = company.company_key
+            logger.info(f"Collection Name: {collection_name}")
             if not client.collection_exists(collection_name):
+                print("hi")
                 logger.info(f"Collection '{collection_name}' does not exist. Creating it.")
                 client.create_collection(
                     collection_name=collection_name,
                     vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
                 )
+            print("Hi")
 
             # Batch store chunks
             logger.info("Storing text chunks in Qdrant")
@@ -300,9 +294,7 @@ async def upload_and_process_files(upload_request: UploadRequest, user: user_dep
         if not os.listdir(dir_path):
             os.rmdir(dir_path)
 
-        return JSONResponse(
-            content={"processed_files": processed_files}, status_code=200
-        )
+        return {"processed_files": processed_files} 
 
     except Exception as e:
         logger.error(f"Error processing files: {str(e)}")
@@ -312,7 +304,7 @@ async def upload_and_process_files(upload_request: UploadRequest, user: user_dep
         if os.path.exists(dir_path) and not os.listdir(dir_path):
             os.rmdir(dir_path)
 
-
+            
 @router.put("/chatbot/{chatbot_id}/prompt")
 async def update_chatbot_prompt(chatbot_id: str, prompt_request: UpdatePromptRequest, user: user_dependency, db: Session = Depends(get_db)):
     try:
@@ -340,11 +332,8 @@ async def get_users_by_chatbot(chatbot_id: str, db: Session = Depends(get_db)):
 
         if not query_users:
             logger.warning("No users found for chatbot ID: %s", chatbot_id)
-            return JSONResponse(content={
-                "status": status.HTTP_200_OK,
-                "data": [],
-                "message": "No users found for this chatbot"
-            })
+            raise HTTPException(status_code=404, detail="No users found for this chatbot")
+
         users_list = []
         for query_user in query_users:
             user_info = {
