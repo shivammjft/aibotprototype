@@ -111,6 +111,9 @@ async def add_company(db: db_dependency,
                 base_url : Optional[HttpUrl] = Form(None),
                 files: List[UploadFile] = File(None)):
     try:
+        if not base_url and not files:
+            return JSONResponse(status_code=200, content={'detail': "Either provide base_url or files for creation"})
+        
         logger.info("Received request to add company: %s")
 
         company = db.query(Company).filter(Company.email == email).first()
@@ -150,12 +153,13 @@ async def add_company(db: db_dependency,
     
         db.add(create_chatbot_model)
 
-        uploaded_files = []
-        for file in files:
-            file_path = os.path.join(shared_folder_path, file.filename)
-            with open(file_path, "wb") as buffer:
-                buffer.write(await file.read())
-            uploaded_files.append(file.filename)  
+        if files: 
+            uploaded_files = []
+            for file in files:
+                file_path = os.path.join(shared_folder_path, file.filename)
+                with open(file_path, "wb") as buffer:
+                    buffer.write(await file.read())
+                uploaded_files.append(file.filename)  
 
         message_body = {
             "company_key": company_key_id,

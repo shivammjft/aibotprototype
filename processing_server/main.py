@@ -20,7 +20,7 @@ shared_folder_path = "/shareduploadfolder"
 def start_rabbitmq_consumer():
     try:
         logger.info('Starting RabbitMQ consumer...')
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
         channel = connection.channel()
         channel.queue_declare(queue=QUEUE_NAME, durable=True)
         logger.info('Waiting for messages...')
@@ -29,7 +29,7 @@ def start_rabbitmq_consumer():
         channel.start_consuming()
     except pika.exceptions.AMQPConnectionError as e:
         logger.error(f"Error connecting to RabbitMQ: {e}")
-
+ 
 @app.on_event("startup")
 async def startup_event():
     consumer_thread = threading.Thread(target=start_rabbitmq_consumer)
