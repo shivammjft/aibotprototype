@@ -23,7 +23,7 @@ class Company(Base):
     email = Column(String(255), unique=True) 
     company_name = Column(String(255))
     company_key = Column(String(255))
-    base_url = Column(String(255), unique=True) 
+    base_url = Column(String(255), unique=True,nullable=True) 
     input_tokens = Column(Integer)  
     output_tokens = Column(Integer)
     created_date = Column(DateTime, default=datetime.now())
