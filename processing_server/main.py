@@ -14,11 +14,13 @@ QUEUE_NAME = "COMPANY_INIT"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+shared_folder_path = "/shareduploadfolder"
+
 
 def start_rabbitmq_consumer():
     try:
         logger.info('Starting RabbitMQ consumer...')
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
         channel = connection.channel()
         channel.queue_declare(queue=QUEUE_NAME, durable=True)
         logger.info('Waiting for messages...')
@@ -34,12 +36,19 @@ async def startup_event():
     consumer_thread.daemon = True
     consumer_thread.start()
 
+
+@app.get("/listfiles")
+async def list_files():
+    files = os.listdir(shared_folder_path)
+    return{"files":files}
+
+
 @app.get("/")
 def read_root():
     return {"message": "FastAPI server is running"}
 
 @app.get("/health")
-def read_root():
+def read_health():
     return {"message": "Server is up and running"}
 
 if __name__ == "__main__":

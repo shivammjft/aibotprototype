@@ -45,6 +45,8 @@ load_dotenv()
 
 router = APIRouter(tags=['prepare'])
 
+shared_folder_path = "/shareduploadfolder"
+
 def chunk_text(text, chunk_size=600, chunk_overlap=60):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     chunks = text_splitter.split_documents([text])
@@ -107,7 +109,7 @@ async def add_company(db: db_dependency,
                 email:str = Form(...),
                 deployment_url:Optional[HttpUrl] = Form(...),
                 base_url : Optional[HttpUrl] = Form(None),
-                files: List[UploadFile] = File(...)):
+                files: List[UploadFile] = File(None)):
     try:
         logger.info("Received request to add company: %s")
 
@@ -148,76 +150,24 @@ async def add_company(db: db_dependency,
     
         db.add(create_chatbot_model)
 
-        folder_name = f"{company_name}-{company_key_id}"
-        dir_path = os.path.join("uploads", folder_name)
-        os.makedirs(dir_path, exist_ok=True)
-
-        if files:
-            processed_files = []
-            for file in files:
-                temp_file_path = os.path.join(dir_path, file.filename)
-
-                with open(temp_file_path, "wb") as buffer:
-                    buffer.write(await file.read()) 
-
-                logger.info(f"Processing file: {file.filename}")
-
-                with open(temp_file_path, "rb") as temp_file:
-                    logger.info("Extracting markdown from the PDF")
-                    pdf_text = pymupdf4llm.to_markdown(temp_file)
-
-                    document = Document(
-                        page_content=pdf_text,
-                        metadata={"source": "Documents"}
-                    )
-                logger.info("Chunking data for processing")
-                text_chunks = chunk_text(document)
-
-                logger.info(f"Total text chunks generated: {len(text_chunks)}")
-
-                embeddings = OpenAIEmbeddings()
-                client = QdrantClient(url="http://localhost:6333", timeout=18000)
-                logger.info("Client Initialized")
-
-                collection_name = company_key_id
-                logger.info(f"Collection Name: {collection_name}")
-                if not client.collection_exists(collection_name):
-                    print("hi")
-                    logger.info(f"Collection '{collection_name}' does not exist. Creating it.")
-                    client.create_collection(
-                        collection_name=collection_name,
-                        vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
-                    )
-
-                # Batch store chunks
-                logger.info("Storing text chunks in Qdrant")
-                batch_size = 100
-                for i in range(0, len(text_chunks), batch_size):
-                    batch_chunks = text_chunks[i : i + batch_size]
-                    batch_uuids = [str(uuid4()) for _ in range(len(batch_chunks))]
-                    logger.info(f"Storing batch {i // batch_size + 1}/{(len(text_chunks) // batch_size) + 1}")
-                    retry_upsert(client, collection_name, batch_chunks, batch_uuids, embeddings)
-
-                logger.info(f"File {file.filename} processed successfully.")
-                processed_files.append(file.filename)
-
-                os.remove(temp_file_path)
-
-            if not os.listdir(dir_path):
-                os.rmdir(dir_path)
-
-            if os.path.exists(dir_path) and not os.listdir(dir_path):
-                os.rmdir(dir_path)       
+        uploaded_files = []
+        for file in files:
+            file_path = os.path.join(shared_folder_path, file.filename)
+            with open(file_path, "wb") as buffer:
+                buffer.write(await file.read())
+            uploaded_files.append(file.filename)  
 
         message_body = {
             "company_key": company_key_id,
-            "chatbot_id": chatbot_id
+            "chatbot_id": chatbot_id,
+            "upload_files":uploaded_files
         }
         message_body_json = json.dumps(message_body)
         QUEUE_NAME = "COMPANY_INIT"
 
         logger.info("Connecting to RabbitMQ to send message.")
         connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
+        # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
         channel = connection.channel()
         channel.queue_declare(queue=QUEUE_NAME, durable=True)
         channel.basic_publish(
@@ -233,6 +183,7 @@ async def add_company(db: db_dependency,
         logger.info("Message sent to RabbitMQ: %s", message_body_json)
         db.commit()
         return {"company": company_key_id}
+
     except Exception as e:
         logger.error("An error occurred: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))
