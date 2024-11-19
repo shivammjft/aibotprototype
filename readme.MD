@@ -15,7 +15,7 @@ Run the Redis server in a Docker container and connect it to the chatbotnetwork:
 
 ```bash
 Copy code
-sudo docker run --network chatbotnetwork --name redis-server -d -p  redis:latest
+sudo docker run --network chatbotnetwork --name redis-server -d redis:latest
 ```
 
 ### 3. Run the RabbitMQ Server
