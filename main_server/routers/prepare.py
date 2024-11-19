@@ -124,7 +124,7 @@ async def add_company(db: db_dependency,
         company_key_id = generate_unique_id()
         create_company_model = Company(
             company_key=company_key_id,
-            base_url=base_url,
+            base_url=base_url if base_url else None,
             email=email,
             input_tokens=0,
             output_tokens=0,
@@ -161,11 +161,18 @@ async def add_company(db: db_dependency,
                     buffer.write(await file.read())
                 uploaded_files.append(file.filename)  
 
-        message_body = {
-            "company_key": company_key_id,
-            "chatbot_id": chatbot_id,
-            "upload_files":uploaded_files
-        }
+            message_body = {
+                "company_key": company_key_id,
+                "chatbot_id": chatbot_id,
+                "upload_files":uploaded_files
+            }
+        else:
+            message_body = {
+                "company_key": company_key_id,
+                "chatbot_id": chatbot_id,
+                "upload_files": []
+            }
+
         message_body_json = json.dumps(message_body)
         QUEUE_NAME = "COMPANY_INIT"
 
