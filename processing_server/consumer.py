@@ -180,7 +180,7 @@ def callback(ch, method, properties, body):
 
 
     if company_document:
-        logger.info(f"Company document found: {company_document.compamy_name}")
+        logger.info(f"Company document found: {company_document}")
         
         if len(upload_files)>0 :
             logger.info(f"Processing files for: {company_document.company_name}")
