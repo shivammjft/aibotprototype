@@ -86,7 +86,7 @@ async def add_company(db: db_dependency,
                 chatbot_name: str =  Form(...),
                 email:str = Form(...),
                 deployment_url:Optional[HttpUrl] = Form(...),
-                base_url : Optional[HttpUrl] = Form(None),
+                base_url : Optional[HttpUrl] = Form(),
                 files: List[UploadFile] = File(None)):
     try:
         if not base_url and not files:
