@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form
 from models.schemas import ClientRequest
 from utils.prepare_bot_utils import generate_unique_id
-from typing import Annotated
+from typing import Annotated, Dict, List
 from datetime import datetime
 from models.tables import Company, Chatbot_stats
 from config.db import SessionLocal
@@ -12,18 +12,11 @@ import logging
 import os
 from dotenv import load_dotenv
 from constants.prompts import user_message
-from fastapi import APIRouter, Depends, status, HTTPException, File, UploadFile, Form
 from fastapi.responses import JSONResponse
-from config.db import SessionLocal
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from decimal import Decimal
-from typing import Annotated, Dict, List
 from routers.auth import get_current_user, get_current_user_with_token
 from models.tables import Chatbot_stats, Company, Queries, QueryUsers,Users
 from models.schemas import QueryUserResponse
 from pydantic import HttpUrl, BaseModel, Field, EmailStr
-import os
 import logging
 import pymupdf4llm
 import pathlib
@@ -153,13 +146,17 @@ async def add_company(db: db_dependency,
     
         db.add(create_chatbot_model)
 
-        if files: 
+        if len(files)>0: 
+            logger.info("File detected")
             uploaded_files = []
             for file in files:
                 file_path = os.path.join(shared_folder_path, file.filename)
                 with open(file_path, "wb") as buffer:
                     buffer.write(await file.read())
-                uploaded_files.append(file.filename)  
+                    
+                uploaded_files.append(file.filename)
+                logger.info(f"Wrote file {file.filename}") 
+            logger.info("All the provided files are written") 
 
             message_body = {
                 "company_key": company_key_id,
