@@ -99,7 +99,7 @@ def process_files(files, company_key, retry_attempts=3):
             
         retry_upsert(vector_store, batch_chunks, batch_uuids, retry_attempts)
 
-        logger.info(f"File {file.filename} processed successfully.")
+        logger.info(f"File {file} processed successfully.")
 
         os.remove(temp_file_path)
 
