@@ -187,7 +187,7 @@ def callback(ch, method, properties, body):
             asyncio.run(process_files(upload_files, company_document.company_key))
 
 
-        logger.info(f"Now will process the site, if it's given {company_document.base_url}")
+        logger.info(f"Now will process the site, if it's given: {company_document.base_url}")
         if company_document.base_url is not None:
         
             logger.info(f"Processing Site for: {company_document.company_name}")
