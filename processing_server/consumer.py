@@ -7,7 +7,7 @@ from fastapi import Depends
 from datetime import datetime
 from constants.email_constants import bot_ready_email_template
 from utils.mailjet import send_email_with_template
-from utils.text_processing_and_chunking import preprocess_text, chunk_text
+from utils.text_processing_and_chunking import preprocess_text, chunk_text, chunk_text_docs
 from dotenv import load_dotenv
 from utils.scraper_links import get_links
 from utils.process_links import parallel_load
@@ -21,6 +21,7 @@ from config.db import SessionLocal
 import logging
 import pymupdf4llm
 from langchain_core.documents import Document
+
 
 load_dotenv()
 
@@ -48,6 +49,7 @@ async def process(url, company_id):
     docs = parallel_load(links, os.cpu_count())
     await prepare_DB(docs, company_id)
 
+
 def process_files(files, company_key):
     for file in files:
         temp_file_path = os.path.join(shared_folder_path, file)
@@ -62,7 +64,7 @@ def process_files(files, company_key):
                 metadata={"source": "Documents"}
             )
         logger.info("Chunking data for processing")
-        text_chunks = chunk_text(document)
+        text_chunks = chunk_text_docs(document)
 
         logger.info(f"Total text chunks generated: {len(text_chunks)}")
 
