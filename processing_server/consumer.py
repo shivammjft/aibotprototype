@@ -180,13 +180,16 @@ def callback(ch, method, properties, body):
 
 
     if company_document:
-        logger.info(f"Company document found: {company_document}")
+        logger.info(f"Company document found: {company_document.compamy_name}")
         
         if len(upload_files)>0 :
             logger.info(f"Processing files for: {company_document.company_name}")
             asyncio.run(process_files(upload_files, company_document.company_key))
 
+
+        logger.info(f"Now will process the site, if it's given {company_document.base_url}")
         if company_document.base_url is not None:
+        
             logger.info(f"Processing Site for: {company_document.company_name}")
             asyncio.run(process(company_document.base_url, company_key))
 
