@@ -50,7 +50,7 @@ async def process(url, company_id):
     await prepare_DB(docs, company_id)
 
 
-def process_files(files, company_key, retry_attempts=3):
+async def process_files(files, company_key, retry_attempts=3):
     for file in files:
         temp_file_path = os.path.join(shared_folder_path, file)
         logger.info(f"Processing file: {file}")
@@ -97,7 +97,7 @@ def process_files(files, company_key, retry_attempts=3):
             )
 
             
-        retry_upsert(vector_store, batch_chunks, batch_uuids, retry_attempts)
+        await retry_upsert(vector_store, batch_chunks, batch_uuids, retry_attempts)
 
         logger.info(f"File {file} processed successfully.")
 
@@ -184,7 +184,7 @@ def callback(ch, method, properties, body):
         
         if len(upload_files)>0 :
             logger.info(f"Processing files for: {company_document.company_name}")
-            processed_file_status = process_files(upload_files, company_document.company_key)
+            asyncio.run(process_files(upload_files, company_document.company_key))
 
         if company_document.base_url is not None:
             logger.info(f"Processing Site for: {company_document.company_name}")
