@@ -50,8 +50,8 @@ async def process(url, company_id):
 
 def process_files(files, company_key):
     for file in files:
-        temp_file_path = os.path.join(shared_folder_path, file.filename)
-        logger.info(f"Processing file: {file.filename}")
+        temp_file_path = os.path.join(shared_folder_path, file)
+        logger.info(f"Processing file: {file}")
 
         with open(temp_file_path, "rb") as temp_file:
             logger.info("Extracting markdown from the PDF")
