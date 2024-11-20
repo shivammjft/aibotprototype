@@ -92,7 +92,7 @@ async def add_company(db: db_dependency,
         if not base_url and not files:
             return JSONResponse(status_code=200, content={'detail': "Either provide base_url or files for creation"})
         
-        logger.info("Received request to add company: %s")
+        logger.info("Received request to add company")
         logger.info(f"Params recieved: company_name: {company_name}, chatbot_name: {chatbot_name}, email: {email}, deployment_url: {deployment_url}, base_url: {base_url}, files: {files}")
 
         company = db.query(Company).filter(Company.email == email).first()
