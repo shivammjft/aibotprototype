@@ -155,7 +155,7 @@ async def retry_upsert(vector_store, text_chunks, uuids, retries=3):
                 logger.error(f"Failed to store documents in Qdrant after {retries} attempts.")
                 raise e
             
-async def callback(ch, method, properties, body):
+def callback(ch, method, properties, body):
     logger.info("Callback triggered")
     global bot_ready_email_template
     db = next(get_db())
@@ -174,7 +174,7 @@ async def callback(ch, method, properties, body):
         
         if len(upload_files)>0 :
             logger.info(f"Processing files for: {company_document.company_name}")
-            processed_file_status = await process_files(upload_files, company_document.company_key)
+            processed_file_status = process_files(upload_files, company_document.company_key)
 
         if company_document.base_url is not None:
             logger.info(f"Processing Site for: {company_document.company_name}")
