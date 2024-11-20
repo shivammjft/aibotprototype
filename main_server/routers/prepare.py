@@ -80,21 +80,6 @@ def retry_upsert(client, collection_name, text_chunks, uuids, embeddings, retrie
                 logger.error("Max retries reached. Failing the upsert operation.")
                 raise
 
-def validate_base_url_or_files(
-    base_url: Optional[HttpUrl] = None,
-    files: Optional[List[UploadFile]] = None
-):
-    """
-    Validation function to ensure at least one of base_url or files is provided.
-    """
-    if not base_url and not files:
-        raise HTTPException(
-            status_code=400,
-            detail="Either 'base_url' or 'files' must be provided."
-        )
-    
-
-
 @router.post("/init_company/")
 async def add_company(db: db_dependency, 
                 company_name : str = Form(...),
@@ -108,6 +93,13 @@ async def add_company(db: db_dependency,
             return JSONResponse(status_code=200, content={'detail': "Either provide base_url or files for creation"})
         
         logger.info("Received request to add company: %s")
+        logger.info(f"""Params recieved: 
+                    company_name: {company_name},
+                    chatbot_name: {chatbot_name},
+                    email: {email},
+                    deployment_url: {deployment_url},
+                    base_url: {base_url},
+                    files: {files}""")
 
         company = db.query(Company).filter(Company.email == email).first()
         if company:
@@ -117,7 +109,7 @@ async def add_company(db: db_dependency,
         company_key_id = generate_unique_id()
         create_company_model = Company(
             company_key=company_key_id,
-            base_url=base_url if base_url else None,
+            base_url=base_url,
             email=email,
             input_tokens=0,
             output_tokens=0,
