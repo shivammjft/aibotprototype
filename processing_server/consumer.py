@@ -48,7 +48,7 @@ async def process(url, company_id):
     docs = parallel_load(links, os.cpu_count())
     await prepare_DB(docs, company_id)
 
-async def process_files(files, company_key):
+def process_files(files, company_key):
     for file in files:
         temp_file_path = os.path.join(shared_folder_path, file.filename)
         logger.info(f"Processing file: {file.filename}")
@@ -181,6 +181,7 @@ def callback(ch, method, properties, body):
             asyncio.run(process(company_document.base_url, company_key))
 
         email = company_document.email
+        logger.info(f"Chatbot document: {chatbot_document}")
         CHATBOT_KEY = chatbot_document.chatbot_id
         API_KEY = company_key
         company_name = company_document.company_name
