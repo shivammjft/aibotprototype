@@ -50,7 +50,7 @@ async def process(url, company_id):
     await prepare_DB(docs, company_id)
 
 
-def process_files(files, company_key):
+def process_files(files, company_key, retry_attempts=3):
     for file in files:
         temp_file_path = os.path.join(shared_folder_path, file)
         logger.info(f"Processing file: {file}")
@@ -88,10 +88,18 @@ def process_files(files, company_key):
         for i in range(0, len(text_chunks), batch_size):
             batch_chunks = text_chunks[i : i + batch_size]
             batch_uuids = [str(uuid4()) for _ in range(len(batch_chunks))]
-            logger.info(f"Storing batch {i // batch_size + 1}/{(len(text_chunks) // batch_size) + 1}")
-            retry_upsert(client, collection_name, batch_chunks, batch_uuids, embeddings)
+            logger.info(f"Processing batch {i // batch_size + 1}: {len(batch_chunks)} chunks.")
 
-        logger.info(f"File {file.filename} processed successfully.")
+            vector_store = QdrantVectorStore(
+                client=client,
+                collection_name=collection_name,
+                embedding=embeddings,
+            )
+
+            
+        retry_upsert(vector_store, batch_chunks, batch_uuids, retry_attempts)
+
+        logger.info(f"File {file} processed successfully.")
 
         os.remove(temp_file_path)
 
