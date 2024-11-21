@@ -1,8 +1,5 @@
-from pydantic import BaseModel,Field,EmailStr,HttpUrl
-from typing import List , Dict,Optional, Any
-from datetime import datetime
-
-
+from pydantic import BaseModel, Field, EmailStr, HttpUrl
+from typing import List, Optional, Any
 
 class RequestModel(BaseModel):
     query: str
@@ -14,15 +11,12 @@ class Company(BaseModel):
     name: str
     metadata: dict
 
-
 class ClientRequest(BaseModel):
     company_name : str = Field(min_length=3, max_length=100)
     base_url : Optional[HttpUrl]
     email:str =EmailStr
     deployment_url:Optional[HttpUrl]  
     chatbot_name: str = Field(min_length=1, max_length=100)
-
-
 
 class AddDataRequest(BaseModel):
     text: str           
@@ -34,12 +28,10 @@ class AddDataRequest(BaseModel):
 class UpdatePromptRequest(BaseModel):
     chatbot_prompt: str
 
-
 class SendChat(BaseModel):
     chatHistory:List
     chatbot_id:str
     session_id:str
-
 
 class AddVisitorRequest(BaseModel):
     origin_url: str
@@ -53,10 +45,7 @@ class AddVisitorRequest(BaseModel):
     referrer: Optional[str] = None  
     location: Optional[Any] = None  
     network_type: Optional[str] = Field(None, alias="networkType")  
- 
-
-
-
+    
 class QueryUserResponse(BaseModel):
     id: int
     session_id: str

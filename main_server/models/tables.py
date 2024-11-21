@@ -1,7 +1,6 @@
 from config.db import Base 
 from datetime import datetime
 from sqlalchemy import Integer, Column, Boolean, String , DateTime,ForeignKey,Text, JSON
-from sqlalchemy.orm import relationship
 
 class Users(Base):
     __tablename__ = "users"
@@ -15,7 +14,6 @@ class Users(Base):
     is_active = Column(Boolean, default=True)
     role = Column(String(50))
 
-
 class Company(Base):
     __tablename__ = "companies"
 
@@ -27,8 +25,6 @@ class Company(Base):
     input_tokens = Column(Integer)  
     output_tokens = Column(Integer)
     created_date = Column(DateTime, default=datetime.now())
-
-
 
 class Chatbot_stats(Base):
     __tablename__ = "chatbots"
@@ -45,8 +41,6 @@ class Chatbot_stats(Base):
     total_queries = Column(Integer) 
     last_query_time = Column(DateTime)
 
-
-
 class Queries(Base):
     __tablename__ = "queries"
 
@@ -61,7 +55,6 @@ class Queries(Base):
     output_tokens = Column(String(255))
     query_time = Column(DateTime)
     origin_url = Column(String(255))
-
 
 class QueryUsers(Base):
     __tablename__ = "query_users"

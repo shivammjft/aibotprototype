@@ -1,18 +1,16 @@
-from fastapi import APIRouter, Depends, status, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, Depends, status, HTTPException, File, UploadFile
 from fastapi.responses import JSONResponse
 from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from decimal import Decimal
 from typing import Annotated, Dict, List
-from routers.auth import get_current_user, get_current_user_with_token
+from routers.auth import get_current_user_with_token
 from models.tables import Chatbot_stats, Company, Queries, QueryUsers,Users
 from models.schemas import QueryUserResponse
-from pydantic import HttpUrl, BaseModel
 import os
 import logging
 import pymupdf4llm
-import pathlib
 from models.schemas import UpdatePromptRequest
 from sqlalchemy.exc import NoResultFound
 from langchain_openai import OpenAIEmbeddings
@@ -20,16 +18,12 @@ from langchain_qdrant import QdrantVectorStore
 from qdrant_client.models import Distance, VectorParams
 from qdrant_client import QdrantClient
 from uuid import uuid4
-import asyncio
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import time
 from langchain_core.documents import Document
 
 
-
-
 router = APIRouter(prefix='/admin', tags=['Admin'])
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

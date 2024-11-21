@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 from fastapi.responses import JSONResponse
 import logging
 from models.tables import Company
-import json
 
 router = APIRouter(prefix='/auth', tags=['Auth'])
 

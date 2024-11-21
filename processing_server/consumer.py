@@ -160,7 +160,7 @@ async def retry_upsert(vector_store, text_chunks, uuids, retries=3):
             logger.error(f"Error during upsert: {str(e)}")
             if attempt < retries - 1:
                 logger.info(f"Retrying after attempt {attempt + 1}...")
-                await asyncio.sleep(2 ** attempt)  
+                await asyncio.sleep(2 ** attempt)   
             else:
                 logger.error(f"Failed to store documents in Qdrant after {retries} attempts.")
                 raise e

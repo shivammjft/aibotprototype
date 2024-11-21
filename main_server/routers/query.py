@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 from utils.auth import get_current_user
-from utils.query_utils import llm, get_message_history, context_retriever,escape_template_string
-from constants.prompts import user_message
+from utils.query_utils import llm, get_message_history, context_retriever
 from models.schemas import RequestModel ,SendChat, AddVisitorRequest
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
@@ -12,7 +11,7 @@ from config.db import SessionLocal
 from sqlalchemy.orm import Session
 from typing import Annotated
 import datetime
-from utils.query_utils import count_tokens,meeting_finder
+from utils.query_utils import count_tokens
 import logging
 import traceback
 from constants.email import bot_chat_template

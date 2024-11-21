@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form
-from models.schemas import ClientRequest
 from utils.prepare_bot_utils import generate_unique_id
-from typing import Annotated, Dict, List
+from typing import Annotated, List
 from datetime import datetime
 from models.tables import Company, Chatbot_stats
 from config.db import SessionLocal
@@ -13,41 +12,18 @@ import os
 from dotenv import load_dotenv
 from constants.prompts import user_message
 from fastapi.responses import JSONResponse
-from routers.auth import get_current_user, get_current_user_with_token
-from models.tables import Chatbot_stats, Company, Queries, QueryUsers,Users
-from models.schemas import QueryUserResponse
-from pydantic import HttpUrl, BaseModel, Field, EmailStr
-import logging
-import pymupdf4llm
-import pathlib
-from models.schemas import UpdatePromptRequest
-from sqlalchemy.exc import NoResultFound
-from langchain_openai import OpenAIEmbeddings
+from pydantic import HttpUrl
 from langchain_qdrant import QdrantVectorStore
-from qdrant_client.models import Distance, VectorParams
-from qdrant_client import QdrantClient
-from uuid import uuid4
-import asyncio
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 import time
-from langchain_core.documents import Document
-from typing import Optional, List, Dict, Any
-
+from typing import Optional
 
 load_dotenv()
-
-router = APIRouter(tags=['prepare'])
-
-shared_folder_path = "/shareduploadfolder"
-
-def chunk_text(text, chunk_size=600, chunk_overlap=60):
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-    chunks = text_splitter.split_documents([text])
-    return chunks
-
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+router = APIRouter(tags=['prepare'])
+shared_folder_path = "/shareduploadfolder"
 
 def get_db():
     db = SessionLocal()
@@ -55,24 +31,27 @@ def get_db():
         yield db 
     finally:
         db.close()
-
 db_dependency = Annotated[Session, Depends(get_db)]
 
 def retry_upsert(client, collection_name, text_chunks, uuids, embeddings, retries=3):
-    
+
     for attempt in range(retries):
         try:
             logger.info(f"Upsert attempt {attempt + 1}")
+
             vector_store = QdrantVectorStore(
                 client=client,
                 collection_name=collection_name,
                 embedding=embeddings,
             )
+
             vector_store.add_documents(documents=text_chunks, ids=uuids)
             logger.info(f"Successfully upserted {len(text_chunks)} documents.")
             break
+
         except Exception as e:
             logger.error(f"Error during upsert attempt {attempt + 1}: {str(e)}")
+
             if attempt < retries - 1:
                 logger.info(f"Retrying in {2 ** attempt} seconds...")
                 time.sleep(2 ** attempt)
@@ -80,7 +59,7 @@ def retry_upsert(client, collection_name, text_chunks, uuids, embeddings, retrie
                 logger.error("Max retries reached. Failing the upsert operation.")
                 raise
 
-@router.post("/init_company/")
+@router.post("/init_company/")                 
 async def add_company(db: db_dependency, 
                 company_name : str = Form(...),
                 chatbot_name: str =  Form(...),
@@ -88,6 +67,7 @@ async def add_company(db: db_dependency,
                 deployment_url:Optional[HttpUrl] = Form(...),
                 base_url : Optional[HttpUrl] = Form(None),
                 files: List[UploadFile] = File(None)):
+    
     try:
         if not base_url and not files:
             return JSONResponse(status_code=200, content={'detail': "Either provide base_url or files for creation"})
@@ -161,7 +141,7 @@ async def add_company(db: db_dependency,
 
         logger.info("Connecting to RabbitMQ to send message.")
         connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
-        # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))
+        # connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', port=5672))  
         channel = connection.channel()
         channel.queue_declare(queue=QUEUE_NAME, durable=True)
         channel.basic_publish(
