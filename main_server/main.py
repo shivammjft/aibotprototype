@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import os
-from routers import auth, query, prepare, admin
+from routers import auth, query, prepare, admin, vectordb
 from dotenv import load_dotenv
 from config.db import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,6 +45,7 @@ app.include_router(prepare.router)
 app.include_router(query.router)
 app.include_router(auth.router)
 app.include_router(admin.router)
+app.include_router(vectordb.router)
 
 if __name__ == "__main__":
     logger.info("Starting FastAPI application")

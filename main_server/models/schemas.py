@@ -31,6 +31,21 @@ class AddDataRequest(BaseModel):
     description: str  
     collection_name: str 
 
+class DeleteDataRequest(BaseModel):
+    document_id: List[str]
+    collection_name: str
+
+class SearchDataByMetaDataRequest(BaseModel):
+    key: str
+    value: str
+    collection_name: str
+    to_retrive: Optional[int] = 100
+
+class DocumentResponse(BaseModel):
+    id: str
+    content: str
+    metadata: dict
+
 class UpdatePromptRequest(BaseModel):
     chatbot_prompt: str
 
