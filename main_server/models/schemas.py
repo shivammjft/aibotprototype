@@ -53,6 +53,8 @@ class AddVisitorRequest(BaseModel):
     referrer: Optional[str] = None  
     location: Optional[Any] = None  
     network_type: Optional[str] = Field(None, alias="networkType")  
+    email:Optional[str] = None
+    phone_number:Optional[str]=  Field(None, alias='phoneNumber')
  
 
 

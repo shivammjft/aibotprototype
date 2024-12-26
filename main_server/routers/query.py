@@ -228,7 +228,9 @@ def add_visitor(req: AddVisitorRequest, request: Request,db:db_dependency):
             platform=req.platform,
             referrer=req.referrer,
             location=req.location,
-            network_type=req.network_type
+            network_type=req.network_type,
+            email=req.email,
+            phone_number=req.phone_number
         )
 
         db.add(new_visitor)
