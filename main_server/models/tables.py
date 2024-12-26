@@ -79,7 +79,7 @@ class QueryUsers(Base):
     referrer = Column(String(255), nullable=True)
     location = Column(JSON, nullable=True)     
     network_type = Column(String(50), nullable=True)  
-    email  = Column(String=255),nullable=True)
+    email  = Column(String=(255),nullable=True)
     phone_number  = Column(String(255),nullable=True)
 
 
