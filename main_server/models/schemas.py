@@ -54,7 +54,7 @@ class AddVisitorRequest(BaseModel):
     location: Optional[Any] = None  
     network_type: Optional[str] = Field(None, alias="networkType")  
     email:Optional[str] = None
-    phone_number:Optional[str]=  Field(None, alias='phoneNumber')
+    phone_number:Optional[str] =  Field(None, alias="phoneNumber")
  
 
 
