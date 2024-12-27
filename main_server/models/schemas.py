@@ -57,9 +57,9 @@ class SendChat(BaseModel):
 
 
 class AddVisitorRequest(BaseModel):
-    origin_url: Optional[str]
-    session_id: Optional[str]
-    chatbot_id: Optional[str]
+    origin_url: Optional[str] = None
+    session_id: Optional[str] = None
+    chatbot_id: Optional[str] = None
     timezone: Optional[str] = None  
     language: Optional[str] = None 
     is_mobile: Optional[bool] = Field(None, alias="isMobile") 
