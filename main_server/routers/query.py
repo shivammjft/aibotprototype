@@ -210,8 +210,10 @@ def add_visitor(req: AddVisitorRequest, request: Request,db:db_dependency):
     try:
         query_user = db.query(QueryUsers).filter(QueryUsers.session_id == req.session_id).first() 
         if query_user:
-            logger.warning("Visitor with this session ID already exists: %s", req.session_id)
-            return {"detail": "Visitor with this session ID already exists."}
+            query_user.email = req.email
+            query_user.phone_number = req.phone_number
+            logger.warning("Visitor with this session ID already exists and updated: %s", req.session_id)
+            return {"status": "200", "message": "Visitor successfully updated"}
         ip_address = request.client.host
         logger.info("Incoming Request: %s", req)
         logger.info("Origin URL: %s, Session ID: %s,IP Address: %s" , req.origin_url, req.session_id,ip_address)
