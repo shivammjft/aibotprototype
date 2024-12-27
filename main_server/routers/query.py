@@ -212,6 +212,7 @@ def add_visitor(req: AddVisitorRequest, request: Request,db:db_dependency):
         if query_user:
             query_user.email = req.email
             query_user.phone_number = req.phone_number
+            db.commit()
             logger.warning("Visitor with this session ID already exists and updated: %s", req.session_id)
             return {"status": "200", "message": "Visitor successfully updated"}
         ip_address = request.client.host
