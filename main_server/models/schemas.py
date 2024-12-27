@@ -32,7 +32,7 @@ class AddDataRequest(BaseModel):
     collection_name: str 
 
 class DeleteDataRequest(BaseModel):
-    document_id: List[str]
+    document_ids: List[str]
     collection_name: str
 
 class SearchDataByMetaDataRequest(BaseModel):
