@@ -117,7 +117,7 @@ bot_chat_template ="""
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Chat Logs from Your AI Chatbot</title>
         <style>
-          body {{
+          body {
             font-family: Arial, sans-serif;
             background-color: #d9e8ff;
             margin: 0;
@@ -125,8 +125,8 @@ bot_chat_template ="""
             height: 100%; /* Ensure the body takes up the full viewport height */
             width: 100%; /* Ensure the body takes up the full viewport width */
             overflow: hidden; /* Prevent scrolling on the body */
-          }}
-          .chat-container {{
+          }
+          .chat-container {
             max-width: 800px;
             margin: 40px auto;
             background: #ffffff;
@@ -135,45 +135,45 @@ bot_chat_template ="""
             position: relative;
             height: 100%;  /* Ensure it fills the available height */
             overflow: hidden;  /* Prevent scrolling in this container */
-          }}
-          .header {{
+          }
+          .header {
             background: linear-gradient(90deg, #0056b3, #007bff);
             color: white;
             padding: 20px;
             text-align: center;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-          }}
-          .header h1 {{
+          }
+          .header h1 {
             margin: 0;
             font-size: 1.8em;
-          }}
-          .details {{
+          }
+          .details {
             background: #eaf3ff;
             padding: 15px;
             border-bottom: 1px solid #ddd;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-          }}
-          .details table {{
+          }
+          .details table {
             width: 100%;
             font-size: 0.9em;
             color: #333;
-          }}
-          .details td {{
+          }
+          .details td {
             padding: 5px;
-          }}
-          .details a {{
+          }
+          .details a {
             color: #0056b3;
             text-decoration: none;
-          }}
-          .chat-log {{
+          }
+          .chat-log {
             padding: 20px;
             background: #f7fbff;
             max-height: 400px; /* Limit the height of the chat log */
             overflow-y: auto;   /* Enable vertical scrolling within the chat log */
             overflow-x: hidden; /* Prevent horizontal scrolling */
             -webkit-overflow-scrolling: touch; /* Smooth scrolling for mobile */
-          }}
-          .chat-bubble {{
+          }
+          .chat-bubble {
             max-width: 60%;
             padding: 10px 15px;
             border-radius: 15px;
@@ -182,16 +182,16 @@ bot_chat_template ="""
             word-wrap: break-word;
             margin: 10px 0;
             display: inline-block;
-          }}
-          .bot-message {{
+          }
+          .bot-message {
             background-color: #e3f2fd;
             color: #333;
-          }}
-          .user-message {{
+          }
+          .user-message {
             background-color: #0056b3;
             color: white;
-          }}
-          .footer {{
+          }
+          .footer {
             background: #eaf3ff;
             text-align: center;
             padding: 10px;
@@ -199,7 +199,7 @@ bot_chat_template ="""
             color: #666;
             border-top: 1px solid #ddd;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-          }}
+          }
         </style>
       </head>
       <body>
@@ -233,7 +233,7 @@ bot_chat_template ="""
         </div>
 
           <div class="chat-log">
-            {{chat_log_html}}
+            {{ chat_log_html }}
           </div>
           <div class="footer">
             <p>Thank you for using our AI chatbot service!</p>
