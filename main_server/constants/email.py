@@ -140,9 +140,9 @@ bot_chat_template ="""
       <!-- Chat Log -->
       <div style="padding: 20px; background: #f7fbff; max-height: 400px; overflow-y: auto;">
         {% for message in chat_history %}
-        <div style="display: flex; align-items: flex-start; margin-bottom: 20px; {% if message.id == 'bot' %} flex-direction: row; {% else %} flex-direction: row-reverse; {% endif %}">
-          <div style="width: 50px; height: 50px; border-radius: 50%; margin: 0 10px; background-size: cover; background-image: url('{{ 'chatbot.png' if message.id == 'bot' else 'user.png' }}');"></div>
-          <div style="max-width: 70%; padding: 15px; border-radius: 12px; font-size: 0.9em; line-height: 1.4; word-wrap: break-word; {% if message.id == 'bot' %} background: linear-gradient(90deg, #e3f2ff, #bfdcff); color: #333; {% else %} background: linear-gradient(90deg, #0056b3, #007bff); color: white; {% endif %}">
+        <div style="display: flex; margin-bottom: 15px; {% if message.id == 'bot' %} justify-content: flex-start; {% else %} justify-content: flex-end; {% endif %}">
+          <div style="max-width: 60%; padding: 10px 15px; border-radius: 15px; font-size: 0.9em; line-height: 1.4; word-wrap: break-word; 
+          {% if message.id == 'bot' %} background-color: #e3f2fd; color: #333; {% else %} background-color: #0056b3; color: white; {% endif %}">
             {{ message.message }}
           </div>
         </div>
