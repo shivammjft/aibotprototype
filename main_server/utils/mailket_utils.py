@@ -3,6 +3,7 @@ from sendgrid.helpers.mail import Mail, TrackingSettings, OpenTracking
 from jinja2 import Template
 import logging
 import os
+import markdown
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -22,11 +23,12 @@ def generate_chat_html(chat_history):
             chat_class = "user-message"
             alignment = 'style="text-align: right;"'
 
+        message_html = markdown.markdown(message["message"])
         chat_log_html += f"""
         <tr>
           <td {alignment}>
             <div class="chat-bubble {chat_class}">
-              {message["message"]}
+              {message_html}
             </div>
           </td>
         </tr>

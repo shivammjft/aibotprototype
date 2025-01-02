@@ -22,3 +22,4 @@ langchain_groq
 alembic==1.13.1
 pymupdf4llm
 sendgrid
+Markdown
