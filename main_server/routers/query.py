@@ -183,7 +183,7 @@ def send_chat_email(req: SendChat, request: Request, db: db_dependency,user: dic
             logger.error("Chatbot not found: %s", req.chatbot_id)
             raise HTTPException(status_code=404, detail="Chatbot not found")
 
-        email = 'enquiry@jellyfishtechnologies.com'
+        email = 'abhinav.sarkar@jellyfishtechnologies.com'
         send_email_with_template(
             recipent_email=email,
             subject="Chatbot Chat",

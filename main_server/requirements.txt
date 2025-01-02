@@ -21,3 +21,4 @@ python-multipart==0.0.9
 langchain_groq
 alembic==1.13.1
 pymupdf4llm
+sendgrid
