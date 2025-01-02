@@ -10,18 +10,44 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def generate_chat_html(chat_history):
+    """Generate HTML content with dynamic chat history in the desired format."""
+    chat_log_html = '<table style="width: 100%;">'
+
+    for message in chat_history:
+        if message["id"] == "bot":
+            chat_class = "bot-message"
+            alignment = ""
+        else:
+            chat_class = "user-message"
+            alignment = 'style="text-align: right;"'
+
+        chat_log_html += f"""
+        <tr>
+          <td {alignment}>
+            <div class="chat-bubble {chat_class}">
+              {message["message"]}
+            </div>
+          </td>
+        </tr>
+        """
+
+    chat_log_html += "</table>"
+    return chat_log_html
+
 def send_email_with_template(recipent_email, subject, company_name, base_link, chatbot_name, session_id, ip_address, chat_history, template):
     logger.info("Preparing to send email to %s", recipent_email)
 
-    try:
+    try: 
         jinja_template = Template(template)
         html_content = jinja_template.render(
             company_name=company_name,
+            chat_log_html=generate_chat_html(chat_history),
             base_link=base_link,
             chatbot_name=chatbot_name,
             session_id=session_id,
             ip_address=ip_address,
-            chat_history=chat_history
+            # chat_history=chat_history
         )
     except Exception as e:
         logger.error("Error rendering the email template: %s", e)

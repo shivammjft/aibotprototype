@@ -109,137 +109,135 @@
 # """
 
 
-bot_chat_template ="""
-
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chat Logs from Your AI Chatbot</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #d9e8ff;
-        margin: 0;
-        padding: 0;
-      }
-      .container {
-        max-width: 800px;
-        margin: 40px auto;
-        background: #ffffff;
-        border-radius: 16px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-        overflow: hidden;
-      }
-      .header {
-        background: linear-gradient(90deg, #0056b3, #007bff);
-        color: white;
-        padding: 20px;
-        text-align: center;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      }
-      .details {
-        background: #eaf3ff;
-        padding: 15px;
-        border-bottom: 1px solid #ddd;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        font-size: 0.9em;
-        color: #333;
-      }
-      .details p {
-        margin: 5px 0;
-      }
-      .details a {
-        color: #0056b3;
-        text-decoration: none;
-      }
-      .chat-log {
-        padding: 20px;
-        background: #f7fbff;
-        max-height: 400px;
-        overflow-y: auto;
-      }
-      .chat-message {
-        display: flex;
-        margin-bottom: 15px;
-      }
-      .chat-message .message-bubble {
-        max-width: 60%;
-        padding: 10px 15px;
-        border-radius: 15px;
-        font-size: 0.9em;
-        line-height: 1.4;
-        word-wrap: break-word;
-      }
-      .chat-message.bot .message-bubble {
-        background-color: #e3f2fd;
-        color: #333;
-        margin-right: auto;
-      }
-      .chat-message.user .message-bubble {
-        background-color: #0056b3;
-        color: white;
-        margin-left: auto;
-      }
-      .footer {
-        background: #eaf3ff;
-        text-align: center;
-        padding: 10px;
-        font-size: 0.8em;
-        color: #666;
-        border-top: 1px solid #ddd;
-        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <!-- Header -->
-      <div class="header">
-        <h1>Chat Logs from Your AI Chatbot</h1>
-      </div>
-
-      <!-- Details Section -->
-      <div class="details">
-        <p><strong>Company Name:</strong> {{ company_name }}</p>
-        <p><strong>Chatbot Name:</strong> {{ chatbot_name }}</p>
-        <p><strong>Session ID:</strong> {{ session_id }}</p>
-        <p><strong>IP Address:</strong> {{ ip_address }}</p>
-        <p>
-          <strong>Deployed URL:</strong>
-          <a href="{{ base_link }}" target="_blank">{{ base_link }}</a>
-        </p>
-      </div>
-
-      <!-- Chat Log -->
-      <div class="chat-log">
-        {% for message in chat_history %}
-        <div class="chat-message {% if message.id == 'bot' %} bot {% else %} user {% endif %}">
-          <div class="message-bubble">
-            <div class="markdown-rendered" id="msg-{{ loop.index }}"></div>
+bot_chat_template =f"""
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Chat Logs from Your AI Chatbot</title>
+        <style>
+          body {{
+            font-family: Arial, sans-serif;
+            background-color: #d9e8ff;
+            margin: 0;
+            padding: 0;
+            height: 100%; /* Ensure the body takes up the full viewport height */
+            width: 100%; /* Ensure the body takes up the full viewport width */
+            overflow: hidden; /* Prevent scrolling on the body */
+          }}
+          .chat-container {{
+            max-width: 800px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+            height: 100%;  /* Ensure it fills the available height */
+            overflow: hidden;  /* Prevent scrolling in this container */
+          }}
+          .header {{
+            background: linear-gradient(90deg, #0056b3, #007bff);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+          }}
+          .header h1 {{
+            margin: 0;
+            font-size: 1.8em;
+          }}
+          .details {{
+            background: #eaf3ff;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+          }}
+          .details table {{
+            width: 100%;
+            font-size: 0.9em;
+            color: #333;
+          }}
+          .details td {{
+            padding: 5px;
+          }}
+          .details a {{
+            color: #0056b3;
+            text-decoration: none;
+          }}
+          .chat-log {{
+            padding: 20px;
+            background: #f7fbff;
+            max-height: 400px; /* Limit the height of the chat log */
+            overflow-y: auto;   /* Enable vertical scrolling within the chat log */
+            overflow-x: hidden; /* Prevent horizontal scrolling */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling for mobile */
+          }}
+          .chat-bubble {{
+            max-width: 60%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            line-height: 1.4;
+            word-wrap: break-word;
+            margin: 10px 0;
+            display: inline-block;
+          }}
+          .bot-message {{
+            background-color: #e3f2fd;
+            color: #333;
+          }}
+          .user-message {{
+            background-color: #0056b3;
+            color: white;
+          }}
+          .footer {{
+            background: #eaf3ff;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.8em;
+            color: #666;
+            border-top: 1px solid #ddd;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+          }}
+        </style>
+      </head>
+      <body>
+        <div class="chat-container">
+          <div class="header">
+            <h1>Chat Logs from Your AI Chatbot</h1>
+          </div>
+          <div class="details">
+            <table>
+              <tr>
+                <td><strong>Company Name:</strong></td>
+                <td>AI Solutions</td>
+              </tr>
+              <tr>
+                <td><strong>Chatbot Name:</strong></td>
+                <td>ChatBotX</td>
+              </tr>
+              <tr>
+                <td><strong>Session ID:</strong></td>
+                <td>123456789</td>
+              </tr>
+              <tr>
+                <td><strong>IP Address:</strong></td>
+                <td>192.168.1.1</td>
+              </tr>
+              <tr>
+                <td><strong>Deployed URL:</strong></td>
+                <td><a href="https://www.aisolutions.com/chatbot" target="_blank">https://www.aisolutions.com/chatbot</a></td>
+              </tr>
+            </table>
+          </div>
+          <div class="chat-log">
+            {{chat_log_html}}
+          </div>
+          <div class="footer">
+            <p>Thank you for using our AI chatbot service!</p>
           </div>
         </div>
-        {% endfor %}
-      </div>
-
-      <!-- Footer -->
-      <div class="footer">
-        <p>Thank you for using our AI chatbot service!</p>
-      </div>
-    </div>
-
-    <script>
-      // Render Markdown messages
-      document.addEventListener("DOMContentLoaded", () => {
-        {% for message in chat_history %}
-        const messageElement = document.getElementById("msg-{{ loop.index }}");
-        messageElement.innerHTML = marked.parse(`{{ message.message }}`);
-        {% endfor %}
-      });
-    </script>
-  </body>
-</html>
-
+      </body>
+    </html>
 """
