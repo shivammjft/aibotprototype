@@ -109,7 +109,7 @@
 # """
 
 
-bot_chat_template =f"""
+bot_chat_template ="""
     <!DOCTYPE html>
     <html lang="en">
       <head>
