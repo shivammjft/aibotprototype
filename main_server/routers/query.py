@@ -159,7 +159,7 @@ async def answer_query(req: RequestModel, request: Request, db: db_dependency, u
 
 
 @router.post("/send-chat/")
-def send_chat_email(req: SendChat, request: Request, db: db_dependency,user: dict = Depends(get_current_user)):
+async def send_chat_email(req: SendChat, request: Request, db: db_dependency,user: dict = Depends(get_current_user)):
     try:
         logger.info("Incoming Request: %s", request)
         chatbot_id = req.chatbot_id
@@ -184,7 +184,7 @@ def send_chat_email(req: SendChat, request: Request, db: db_dependency,user: dic
             raise HTTPException(status_code=404, detail="Chatbot not found")
 
         email = 'abhinav.sarkar@jellyfishtechnologies.com'
-        send_email_with_template(
+        await send_email_with_template(
             recipent_email=email,
             subject="Chatbot Chat",
             company_name=user.company_name,
