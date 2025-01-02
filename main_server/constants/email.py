@@ -209,28 +209,29 @@ bot_chat_template ="""
           </div>
           <div class="details">
             <table>
-              <tr>
-                <td><strong>Company Name:</strong></td>
-                <td>AI Solutions</td>
-              </tr>
-              <tr>
-                <td><strong>Chatbot Name:</strong></td>
-                <td>ChatBotX</td>
-              </tr>
-              <tr>
-                <td><strong>Session ID:</strong></td>
-                <td>123456789</td>
-              </tr>
-              <tr>
-                <td><strong>IP Address:</strong></td>
-                <td>192.168.1.1</td>
-              </tr>
-              <tr>
-                <td><strong>Deployed URL:</strong></td>
-                <td><a href="https://www.aisolutions.com/chatbot" target="_blank">https://www.aisolutions.com/chatbot</a></td>
-              </tr>
+                <tr>
+                    <td><strong>Company Name:</strong></td>
+                    <td>{{ company_name }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Chatbot Name:</strong></td>
+                    <td>{{ chatbot_name }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Session ID:</strong></td>
+                    <td>{{ session_id }}</td>
+                </tr>
+                <tr>
+                    <td><strong>IP Address:</strong></td>
+                    <td>{{ ip_address }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Deployed URL:</strong></td>
+                    <td><a href="{{ base_link }}" target="_blank">{{ base_link }}</a></td>
+                </tr>
             </table>
-          </div>
+        </div>
+
           <div class="chat-log">
             {{chat_log_html}}
           </div>
