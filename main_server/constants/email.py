@@ -117,43 +117,129 @@ bot_chat_template ="""
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat Logs from Your AI Chatbot</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #d9e8ff;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 800px;
+        margin: 40px auto;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+      }
+      .header {
+        background: linear-gradient(90deg, #0056b3, #007bff);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      }
+      .details {
+        background: #eaf3ff;
+        padding: 15px;
+        border-bottom: 1px solid #ddd;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        font-size: 0.9em;
+        color: #333;
+      }
+      .details p {
+        margin: 5px 0;
+      }
+      .details a {
+        color: #0056b3;
+        text-decoration: none;
+      }
+      .chat-log {
+        padding: 20px;
+        background: #f7fbff;
+        max-height: 400px;
+        overflow-y: auto;
+      }
+      .chat-message {
+        display: flex;
+        margin-bottom: 15px;
+      }
+      .chat-message .message-bubble {
+        max-width: 60%;
+        padding: 10px 15px;
+        border-radius: 15px;
+        font-size: 0.9em;
+        line-height: 1.4;
+        word-wrap: break-word;
+      }
+      .chat-message.bot .message-bubble {
+        background-color: #e3f2fd;
+        color: #333;
+        margin-right: auto;
+      }
+      .chat-message.user .message-bubble {
+        background-color: #0056b3;
+        color: white;
+        margin-left: auto;
+      }
+      .footer {
+        background: #eaf3ff;
+        text-align: center;
+        padding: 10px;
+        font-size: 0.8em;
+        color: #666;
+        border-top: 1px solid #ddd;
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+      }
+    </style>
   </head>
-  <body style="font-family: Arial, sans-serif; background-color: #d9e8ff; margin: 0; padding: 0;">
-    <div style="max-width: 800px; margin: 40px auto; background: #ffffff; border-radius: 16px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); overflow: hidden;">
+  <body>
+    <div class="container">
       <!-- Header -->
-      <div style="background: linear-gradient(90deg, #0056b3, #007bff); color: white; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);">
-        <h1 style="margin: 0; font-size: 1.8em;">Chat Logs from Your AI Chatbot</h1>
+      <div class="header">
+        <h1>Chat Logs from Your AI Chatbot</h1>
       </div>
 
       <!-- Details Section -->
-      <div style="background: #eaf3ff; padding: 15px; border-bottom: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
-        <p style="margin: 5px 0; font-size: 0.9em; color: #333;"><strong>Company Name:</strong> {{ company_name }}</p>
-        <p style="margin: 5px 0; font-size: 0.9em; color: #333;"><strong>Chatbot Name:</strong> {{ chatbot_name }}</p>
-        <p style="margin: 5px 0; font-size: 0.9em; color: #333;"><strong>Session ID:</strong> {{ session_id }}</p>
-        <p style="margin: 5px 0; font-size: 0.9em; color: #333;"><strong>IP Address:</strong> {{ ip_address }}</p>
-        <p style="margin: 5px 0; font-size: 0.9em; color: #333;">
+      <div class="details">
+        <p><strong>Company Name:</strong> {{ company_name }}</p>
+        <p><strong>Chatbot Name:</strong> {{ chatbot_name }}</p>
+        <p><strong>Session ID:</strong> {{ session_id }}</p>
+        <p><strong>IP Address:</strong> {{ ip_address }}</p>
+        <p>
           <strong>Deployed URL:</strong>
-          <a href="{{ base_link }}" style="color: #0056b3; text-decoration: none;" target="_blank">{{ base_link }}</a>
+          <a href="{{ base_link }}" target="_blank">{{ base_link }}</a>
         </p>
       </div>
 
       <!-- Chat Log -->
-      <div style="padding: 20px; background: #f7fbff; max-height: 400px; overflow-y: auto;">
+      <div class="chat-log">
         {% for message in chat_history %}
-        <div style="display: flex; margin-bottom: 15px; {% if message.id == 'bot' %} justify-content: flex-start; {% else %} justify-content: flex-end; {% endif %}">
-          <div style="max-width: 60%; padding: 10px 15px; border-radius: 15px; font-size: 0.9em; line-height: 1.4; word-wrap: break-word; 
-          {% if message.id == 'bot' %} background-color: #e3f2fd; color: #333; {% else %} background-color: #0056b3; color: white; {% endif %}">
-            {{ message.message }}
+        <div class="chat-message {% if message.id == 'bot' %} bot {% else %} user {% endif %}">
+          <div class="message-bubble">
+            <div class="markdown-rendered" id="msg-{{ loop.index }}"></div>
           </div>
         </div>
         {% endfor %}
       </div>
 
       <!-- Footer -->
-      <div style="background: #eaf3ff; text-align: center; padding: 10px; font-size: 0.8em; color: #666; border-top: 1px solid #ddd; box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);">
+      <div class="footer">
         <p>Thank you for using our AI chatbot service!</p>
       </div>
     </div>
+
+    <script>
+      // Render Markdown messages
+      document.addEventListener("DOMContentLoaded", () => {
+        {% for message in chat_history %}
+        const messageElement = document.getElementById("msg-{{ loop.index }}");
+        messageElement.innerHTML = marked.parse(`{{ message.message }}`);
+        {% endfor %}
+      });
+    </script>
   </body>
 </html>
+
 """
