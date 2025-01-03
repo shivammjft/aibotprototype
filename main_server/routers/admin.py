@@ -346,7 +346,7 @@ async def get_users_by_chatbot(chatbot_id: str, db: Session = Depends(get_db)):
             "location":query_user.location,
             "network_type":query_user.network_type,
             "email": query_user.email,
-            "phone_number": query_user.phone_number,
+            "phone_number": query_user.phone_number
             }
             users_list.append(user_info)
 

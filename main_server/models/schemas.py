@@ -87,3 +87,5 @@ class QueryUserResponse(BaseModel):
     referrer: Optional[str] = None  
     location:Optional[Any] = None  
     network_type: Optional[str] = None  
+    email:Optional[str] = None
+    phone_number:Optional[str] = None
